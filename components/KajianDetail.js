@@ -1,28 +1,64 @@
 import React, { Component } from 'react';
 import { Image, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-import { Body, Button, Card, CardItem, Content, Container, Header, Left, Text, Title } from 'native-base';
+import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Text, Title } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 
 export default class KajianDetail extends Component {
 
-	static navigationOptions = {
-		header: false
+	static navigationOptions = ({ navigation }) => {
+		return {
+			header: (
+				<Header>
+					<Left>
+						<TouchableOpacity onPress={ () => { navigation.goBack() } }>
+							<Icon 
+								name="md-arrow-back" 
+								style={ styles.backButton } />
+						</TouchableOpacity>
+					</Left>
+					<Body>
+						<Title>Kajian Sunnah</Title>
+					</Body>
+					<Right></Right>
+				</Header>
+			)
+		};
 	};
 
 	constructor( props ) {
 
 		super( props );
+
+		let lat = this.props.navigation.state.params.item.latitude == null ? 0 : parseFloat( this.props.navigation.state.params.item.latitude );
+		let lng = this.props.navigation.state.params.item.longitude == null ? 0 : parseFloat( this.props.navigation.state.params.item.longitude );
+
 		this.state = {
 			region: {
-				latitude: 37.78825,
-				longitude: -122.4324,
+				latitude: lat,
+				longitude: lng,
 				latitudeDelta: 0.0922,
 				longitudeDelta: 0.0421,
 			}
 		};
 
+	}
+
+	_confirmAttendance() {
+
+	}
+
+	_parseDateTime( datetime ) {
+		var datetime = datetime.split( ' ' );
+		var month = [ 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember' ];
+		var date = datetime[0].split( '-' );
+		date = date[2] + ' ' + month[date[1].replace(/^0+/, '')] + ' ' + date[0];
+		var time = datetime[1];
+		return {
+			date: date,
+			time: time
+		};
 	}
 
 	render() {
@@ -31,20 +67,11 @@ export default class KajianDetail extends Component {
 
 		return (
 			<Container>
-				<Header>
-					<Left>
-						<TouchableOpacity onPress={ () => { this.props.navigation.goBack() } }>
-							<Icon 
-								name="md-arrow-back" 
-								style={ styles.backButton } />
-						</TouchableOpacity>
-					</Left>
-					<Body>
-						<Title>Kajian</Title>
-					</Body>
-				</Header>
 				<Content>
 					<Card>
+						<CardItem style={ styles.cardBody }>
+							<Text style={{ fontSize: 16 }}>{ params.item.judul_kajian }</Text>
+						</CardItem>
 						<CardItem cardBody>
 							<Image source={{ uri: 'http://placehold.it/350x200' }} style={ styles.cardImage } />
 						</CardItem>
@@ -52,41 +79,55 @@ export default class KajianDetail extends Component {
 							<Body style={ styles.cardBody }>
 								<Grid>
 									<Col style={{ height: 150, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-										<Text style={{ fontSize: 20 }} >
+										<Text style={{ fontSize: 17 }} >
 											<Icon name="md-pin" style={{ fontSize: 23 }} /> Location
 										</Text>
+										<Text>{ params.item.nama_masjid }</Text>
+										<Text>{ params.item.alamat }</Text>
 									</Col>
             						<Col style={{ height: 150, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-            							<Text style={{ fontSize: 20 }} >
+            							<Text style={{ fontSize: 17 }} >
             								<Icon name="md-calendar" style={{ fontSize: 23 }} /> Date
             							</Text>
+            							<Text>{ this._parseDateTime( params.item.waktu_kajian ).date }</Text>
+            							<Text>{ 'Pukul ' + this._parseDateTime( params.item.waktu_kajian ).time }</Text>
             						</Col>
 								</Grid>
 								<Grid>
 									<Col style={{ height: 250 }}>
 										<View style={ styles.container }>
 											<MapView
-												provider={PROVIDER_GOOGLE}
+												draggable={ false }
+												provider={ PROVIDER_GOOGLE }
 												style={ styles.map }
-												region={this.state.region} />
+												region={ this.state.region }>
+												<Marker
+													title={ params.item.nama_masjid }
+													coordinate={ this.state.region } />
+											</MapView>
 										</View>
 									</Col>
 								</Grid>
 								<Grid>
 									<Col style={{ padding: 10 }}>
-										<Text style={{ fontSize: 18 }} >
+										<Text>
 											Apakah akan hadir?
 										</Text>
 									</Col>
             						<Col style={{ padding: 10 }}>
         								<Content>
-								          <Button light><Text> Light </Text></Button>
-								          <Button primary><Text> Primary </Text></Button>
-								          <Button success><Text> Success </Text></Button>
-								          <Button info><Text> Info </Text></Button>
-								          <Button warning><Text> Warning </Text></Button>
-								          <Button danger><Text> Danger </Text></Button>
-								          <Button dark><Text> Dark </Text></Button>
+								          <Grid>
+								          	<Col>
+								          		<Button success disabled={ false } style={{ width: 75, justifyContent: 'center' }}>
+										          	<Text>Ya</Text>
+										        </Button>
+								          	</Col>
+								          	<Col>
+								          		<Button danger disabled={ false } style={{ width: 75, justifyContent: 'center' }}>
+										          	<Text>Tidak</Text>
+										        </Button>
+								          	</Col>
+								          </Grid>
 								        </Content>
             						</Col>
 								</Grid>
@@ -96,10 +137,7 @@ export default class KajianDetail extends Component {
 					<Card>
 						<CardItem>
 							<Body style={ styles.cardBody }>
-								<Text style={{ fontSize: 23 }}>Detail</Text>
-								<Text>
-									Akan dilaksanakan kajian bertema Sholat Sunnah yang Menyamai Pahala Sholat Wajib. Insya Allah akan dilaksanakan di Masjid Bakti. Jln. Subakti Palembang pada hari Rabu waktu setelah Ba'da Maghrib
-								</Text>
+								<Text>Akan dilaksanakan kajian bertema Sholat Sunnah yang Menyamai Pahala Sholat Wajib. Insya Allah akan dilaksanakan di Masjid Bakti. Jln. Subakti Palembang pada hari Rabu waktu setelah Ba'da Maghrib</Text>
 							</Body>
 						</CardItem>
 					</Card>

@@ -1,11 +1,33 @@
 import React, { Component } from 'react';
 import { FlatList, TouchableOpacity, View, NetInfo } from 'react-native';
-import { Body, Container, Content, Header, Spinner, Tab, Tabs, Text, Toast } from 'native-base';
+import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast } from 'native-base';
+import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 
-const BASE_URL  = 'http://192.168.43.144/kajian/';
+const BASE_URL  = 'http://kajian.synapseclc.co.id/';
 
 export default class BaseTabs extends Component {
+
+  static navigationOptions = ({ navigation }) => {
+    return {
+      header: (
+        <Header hasTabs>
+          <Left>
+            <TouchableOpacity onPress={ () => this.openDrawer() }>
+              <Icon
+                name="md-menu"
+                size={ 30 }
+                style={{ color: 'white' }} />
+            </TouchableOpacity>
+          </Left>
+          <Body>
+            <Title>Kajian Sunnah</Title>
+          </Body>
+          <Right></Right>
+        </Header>
+      )
+    }
+  };
 
   constructor( props ) {
 
@@ -21,31 +43,17 @@ export default class BaseTabs extends Component {
   componentDidMount() {
 
     this._fetchAPI();
-    NetInfo.isConnected.addEventListener( 'change', this._handleConnectionChange );
-
-  }
-
-  _handleConnectionChange() {
-
-    NetInfo.isConnected.fetch()
-      .then(isConnected => {
-        this.setState({ connected: isConnected });
-        if ( isConnected ) {
-          _fetchAPI();
-        }
-      });
 
   }
 
   _fetchAPI() {
 
-    fetch(BASE_URL + 'service', {
-        method: 'POST',
+    fetch(BASE_URL + 'service/get_kajian', {
+        method: 'GET',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'param1=param_1&param2=param_2'
+        }
       })
       .then(( response ) => response.json())
       .then(( responseJson ) => {
@@ -56,9 +64,10 @@ export default class BaseTabs extends Component {
       })
       .catch(( error ) => {
         Toast.show({
-          text: 'No internet connection!',
+          text: 'Can not connect to server',
           position: 'bottom',
-          buttonText: 'Close'
+          buttonText: 'Close',
+          duration: 10000 // 10 seconds
         });
       });
 
@@ -69,54 +78,46 @@ export default class BaseTabs extends Component {
     if ( this.state.data == null ) {
 
       return (
-        <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
-          <Spinner color='blue' />
-        </View>
+        <Root>
+          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
+            <Spinner color='blue' />
+          </View>
+        </Root>
       );
     
-    } 
-    // else if ( this.state.connected == false ) {
-
-    //   return (
-    //     <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
-    //       <Text>No internet connection!</Text>
-    //     </View>
-    //   );
-
-    // } 
-    else {
+    } else {
 
       const { navigate } = this.props.navigation;
 
+      openDrawer = () => {
+        this.drawer._root.open();
+      };
+
       return (
-        <Container>
-          <Tabs initialPage={0}>
-            <Tab heading="Kajian">
-              
+        <Root>
+          <Drawer
+            ref={ (ref) => { this.drawer = ref } }
+            content={ <Sidebar navigator={ this.navigator } /> }
+            onClose={ () => this.drawer._root.close() }>
+            <Container>
               <Content>
                 <FlatList
                   data={ this.state.data }
                   renderItem={ ({ item }) =>
-                    <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { title: item.title } ) }>
+                    <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { item } ) }>
                       <KajianCard 
-                        title={ item.title } 
-                        lecturer={ item.lecturer }
-                        imgSrc={ item.imgSrc } />
+                        title={ item.judul_kajian } 
+                        lecturer={ item.nama_ustad }
+                        imgSrc={ 'http://placehold.it/350x200' } />
                     </TouchableOpacity>
 
                   }
                   keyExtractor={ ( item, index ) => index.toString() }
                 />
               </Content>
-
-            </Tab>
-            <Tab heading="Playlist">
-              
-              {/* Playlist implementation here */}
-
-            </Tab>
-          </Tabs>
-        </Container>
+            </Container>
+          </Drawer>
+        </Root>
       );
 
     }
