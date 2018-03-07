@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { TouchableOpacity } from 'react-native';
+import { Alert, TouchableOpacity } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast } from 'native-base';
 
 let SharedPreferences 	= require( 'react-native-shared-preferences' );
@@ -34,7 +34,19 @@ export default class Login extends Component {
 			    .then(( response ) => response.json())
 			    .then(( responseJson ) => {
 			    	if ( responseJson.loggedIn ) {
+			    		
 			    		navigate( 'BaseTabs' );
+			    	
+			    	} else {
+
+			    		// SharedPreferences.removeItem( 'accessToken' );
+						Toast.show({
+							text: 'Your access token is expired. Please login again',
+							position: 'bottom',
+							buttonText: 'Close',
+							duration: 10000 // 10 seconds
+				        });
+
 			    	}
 			    })
 			    .catch(( error ) => {
@@ -51,6 +63,8 @@ export default class Login extends Component {
 	}
 
 	_login() {
+
+		const { navigate } = this.props.navigation;
 
 		let email 		= this.state.email;
 		let password 	= this.state.password;
@@ -69,11 +83,15 @@ export default class Login extends Component {
 	    		SharedPreferences.setItem( 'accessToken', responseJson.accessToken );
 	    		navigate( 'BaseTabs' );
 	    	
+	    	} else {
+
+	    		Alert.alert( 'Email atau password salah' );
+
 	    	}
 	    })
 	    .catch(( error ) => {
         	Toast.show({
-				text: 'Can not connect to server',
+				text: 'Can not connect to server' + error.toString(),
 				position: 'bottom',
 				buttonText: 'Close',
 				duration: 10000 // 10 seconds

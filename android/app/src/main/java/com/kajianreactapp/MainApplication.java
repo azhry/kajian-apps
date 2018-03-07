@@ -3,6 +3,7 @@ package com.kajianreactapp;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.dialogprogress.DialogProgressPackage;
 import com.airbnb.android.react.maps.MapsPackage;
 import in.sriraman.sharedpreferences.RNSharedPreferencesReactPackage;
 import com.facebook.react.ReactNativeHost;
@@ -25,6 +26,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new DialogProgressPackage(),
             new MapsPackage(),
             new RNSharedPreferencesReactPackage()
       );
