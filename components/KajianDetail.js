@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
-import { Image, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Alert, Image, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Text, Title } from 'native-base';
+import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Root, Text, Title, Toast } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import { Buffer } from 'buffer';
+
+let SharedPreferences   = require( 'react-native-shared-preferences' );
+const BASE_URL = 'http://kajian.synapseclc.co.id/';
 
 export default class KajianDetail extends Component {
 
@@ -40,12 +44,125 @@ export default class KajianDetail extends Component {
 				longitude: lng,
 				latitudeDelta: 0.0922,
 				longitudeDelta: 0.0421,
-			}
+			},
+			src: BASE_URL + 'assets/uploads/jadwal/' + this.props.navigation.state.params.item.thumbnail,
+			user_id: '',
+			attendance: 2, // no attendance
+			attendanceButton: this._rerenderAttendanceButton( 2 )
 		};
 
 	}
 
-	_confirmAttendance() {
+	componentDidMount() {
+
+		SharedPreferences.getItem('accessToken', ( value ) => {
+			if ( value != undefined ) {
+				let tokens = value.split( '.' );
+				let user_id =  new Buffer( tokens[0], 'base64' ).toString( 'ascii' );
+				this.setState({ user_id: user_id });
+				this._checkAttendance( user_id );
+			}
+		});
+
+	}
+
+	_rerenderAttendanceButton( attendanceType ) {
+
+		if ( attendanceType == 1 || attendanceType == 0 ) {
+			
+			return (
+				<Grid>
+		          	<Col>
+		          		<Button bordered dark 
+		          			onPress={ () => this._confirmAttendance( 2 ) } // absent
+		          			style={{ width: 150, justifyContent: 'center' }}>
+				          	<Text>Batal</Text>
+				        </Button>
+		          	</Col>
+	          	</Grid>
+			);
+
+		} else {
+			
+			return (
+				<Grid>
+					<Col>
+		          		<Button success 
+		          			onPress={ () => this._confirmAttendance( 1 ) }
+		          			style={{ width: 75, justifyContent: 'center' }}>
+				          	<Text>Ya</Text>
+				        </Button>
+		          	</Col>
+		          	<Col>
+		          		<Button danger 
+		          			onPress={ () => this._confirmAttendance( 0 ) } // absent
+		          			style={{ width: 75, justifyContent: 'center' }}>
+				          	<Text>Tidak</Text>
+				        </Button>
+		          	</Col>
+	          	</Grid>
+			);
+
+		}
+	}
+
+	_checkAttendance( id_user ) {
+
+		fetch(BASE_URL + 'service/check_attendance', {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: 'id_jadwal=' + this.props.navigation.state.params.item.id_jadwal + '&id_user=' + id_user
+		})
+		.then(( response ) => response.json())
+		.then(( responseJson ) => {
+
+			this.setState({
+				attendanceType: responseJson.attendance,
+				attendanceButton: this._rerenderAttendanceButton( responseJson.attendance )
+			});
+
+		})
+		.catch(( error ) => {
+			Toast.show({
+				text: error.toString(),
+				position: 'bottom',
+				buttonText: 'Close',
+				duration: 10000 // 10 seconds
+		    });
+		});
+	
+	}
+
+	_confirmAttendance( attendanceType ) {
+
+		fetch(BASE_URL + 'service/set_kehadiran', {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: 'attendance=' + attendanceType + '&id_jadwal=' + this.props.navigation.state.params.item.id_jadwal + '&id_user=' + this.state.user_id
+		})
+		.then(( response ) => response.json())
+		.then(( responseJson ) => {
+
+			this.setState({ 
+				attendanceType: attendanceType,
+				attendanceButton: this._rerenderAttendanceButton( attendanceType ) 
+			});
+
+		})
+		.catch(( error ) => {
+			Toast.show({
+				text: 'Can not connect to server',
+				position: 'bottom',
+				buttonText: 'Close',
+				duration: 10000 // 10 seconds
+	        });
+		});
 
 	}
 
@@ -61,88 +178,97 @@ export default class KajianDetail extends Component {
 		};
 	}
 
+	_displayAttendanceStatus() {
+
+		if ( this.state.attendanceType == 1 ) {
+			return 'Hadir';
+		} else if ( this.state.attendanceType == 0 ) {
+			return 'Tidak hadir';
+		}
+
+		return '';
+
+	}
+
 	render() {
 
 		const { params } = this.props.navigation.state;
 
 		return (
-			<Container>
-				<Content>
-					<Card>
-						<CardItem style={ styles.cardBody }>
-							<Text style={{ fontSize: 16 }}>{ params.item.judul_kajian }</Text>
-						</CardItem>
-						<CardItem cardBody>
-							<Image source={{ uri: 'http://placehold.it/350x200' }} style={ styles.cardImage } />
-						</CardItem>
-						<CardItem>
-							<Body style={ styles.cardBody }>
-								<Grid>
-									<Col style={{ height: 150, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-										<Text style={{ fontSize: 17 }} >
-											<Icon name="md-pin" style={{ fontSize: 23 }} /> Location
-										</Text>
-										<Text>{ params.item.nama_masjid }</Text>
-										<Text>{ params.item.alamat }</Text>
-									</Col>
-            						<Col style={{ height: 150, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-            							<Text style={{ fontSize: 17 }} >
-            								<Icon name="md-calendar" style={{ fontSize: 23 }} /> Date
-            							</Text>
-            							<Text>{ this._parseDateTime( params.item.waktu_kajian ).date }</Text>
-            							<Text>{ 'Pukul ' + this._parseDateTime( params.item.waktu_kajian ).time }</Text>
-            						</Col>
-								</Grid>
-								<Grid>
-									<Col style={{ height: 250 }}>
-										<View style={ styles.container }>
-											<MapView
-												draggable={ false }
-												provider={ PROVIDER_GOOGLE }
-												style={ styles.map }
-												region={ this.state.region }>
-												<Marker
-													title={ params.item.nama_masjid }
-													coordinate={ this.state.region } />
-											</MapView>
-										</View>
-									</Col>
-								</Grid>
-								<Grid>
-									<Col style={{ padding: 10 }}>
-										<Text>
-											Apakah akan hadir?
-										</Text>
-									</Col>
-            						<Col style={{ padding: 10 }}>
-        								<Content>
-								          <Grid>
-								          	<Col>
-								          		<Button success disabled={ false } style={{ width: 75, justifyContent: 'center' }}>
-										          	<Text>Ya</Text>
-										        </Button>
-								          	</Col>
-								          	<Col>
-								          		<Button danger disabled={ false } style={{ width: 75, justifyContent: 'center' }}>
-										          	<Text>Tidak</Text>
-										        </Button>
-								          	</Col>
-								          </Grid>
-								        </Content>
-            						</Col>
-								</Grid>
-							</Body>
-						</CardItem>
-					</Card>
-					<Card>
-						<CardItem>
-							<Body style={ styles.cardBody }>
-								<Text>Akan dilaksanakan kajian bertema Sholat Sunnah yang Menyamai Pahala Sholat Wajib. Insya Allah akan dilaksanakan di Masjid Bakti. Jln. Subakti Palembang pada hari Rabu waktu setelah Ba'da Maghrib</Text>
-							</Body>
-						</CardItem>
-					</Card>
-				</Content>
-			</Container>
+			<Root>
+				<Container>
+					<Content>
+						<Card>
+							<CardItem style={ styles.cardBody }>
+								<Text style={{ fontSize: 16 }}>{ params.item.judul_kajian }</Text>
+							</CardItem>
+							<CardItem cardBody>
+								<Image 
+									source={{ uri: this.state.src }}
+									onError={ (e) => { this.setState({ src: 'http://placehold.it/350x200' }) } } 
+									style={ styles.cardImage } />
+							</CardItem>
+							<CardItem>
+								<Body style={ styles.cardBody }>
+									<Grid>
+										<Col style={{ height: 150, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
+											<Text style={{ fontSize: 17 }} >
+												<Icon name="md-pin" style={{ fontSize: 23 }} /> Location
+											</Text>
+											<Text>{ params.item.nama_masjid }</Text>
+											<Text>{ params.item.alamat }</Text>
+										</Col>
+	            						<Col style={{ height: 150, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
+	            							<Text style={{ fontSize: 17 }} >
+	            								<Icon name="md-calendar" style={{ fontSize: 23 }} /> Date
+	            							</Text>
+	            							<Text>{ this._parseDateTime( params.item.waktu_kajian ).date }</Text>
+	            							<Text>{ 'Pukul ' + this._parseDateTime( params.item.waktu_kajian ).time }</Text>
+	            						</Col>
+									</Grid>
+									<Grid>
+										<Col style={{ height: 250 }}>
+											<View style={ styles.container }>
+												<MapView
+													draggable={ false }
+													provider={ PROVIDER_GOOGLE }
+													style={ styles.map }
+													region={ this.state.region }>
+													<Marker
+														title={ params.item.nama_masjid }
+														coordinate={ this.state.region } />
+												</MapView>
+											</View>
+										</Col>
+									</Grid>
+									<Grid>
+										<Col style={{ padding: 10 }}>
+											<Text>
+												Apakah akan hadir?
+											</Text>
+											<Text>
+												{ this._displayAttendanceStatus() }
+											</Text>
+										</Col>
+	            						<Col style={{ padding: 10 }}>
+	        								<Content>
+												{ this.state.attendanceButton }
+									        </Content>
+	            						</Col>
+									</Grid>
+								</Body>
+							</CardItem>
+						</Card>
+						<Card>
+							<CardItem>
+								<Body style={ styles.cardBody }>
+									<Text>{ params.item.deskripsi }</Text>
+								</Body>
+							</CardItem>
+						</Card>
+					</Content>
+				</Container>
+			</Root>
 		);
 
 	}

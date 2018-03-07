@@ -1,15 +1,26 @@
 import React, { Component } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Alert, Image, StyleSheet } from 'react-native';
 import { Body, Card, CardItem, Icon, Text } from 'native-base';
 
 export default class KajianCard extends Component {
+
+	constructor( props ) {
+
+		super( props );
+		this.state = {
+			src: this.props.imgSrc
+		};
+	}
 
 	render() {
 
 		return (
 			<Card>
 				<CardItem cardBody>
-					<Image source={{ uri: this.props.imgSrc }} style={ styles.cardImage } />
+					<Image 
+						source={{ uri: this.state.src }} 
+						onError={ (e) => { this.setState({ src: 'http://placehold.it/350x200' }) } }
+						style={ styles.cardImage } />
 				</CardItem>
 				<CardItem>
 					<Body style={ styles.cardBody }>

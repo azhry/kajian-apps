@@ -4,7 +4,8 @@ import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spin
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 
-const BASE_URL  = 'http://kajian.synapseclc.co.id/';
+let SharedPreferences   = require( 'react-native-shared-preferences' );
+const BASE_URL          = 'http://kajian.synapseclc.co.id/';
 
 export default class BaseTabs extends Component {
 
@@ -23,7 +24,14 @@ export default class BaseTabs extends Component {
           <Body>
             <Title>Kajian Sunnah</Title>
           </Body>
-          <Right></Right>
+          <Right>
+            <TouchableOpacity onPress={ () => this._logout( navigation ) }>
+              <Icon
+                name="md-exit"
+                size={ 30 }
+                style={{ color: 'white' }} />
+            </TouchableOpacity>
+          </Right>
         </Header>
       )
     }
@@ -39,6 +47,7 @@ export default class BaseTabs extends Component {
     };
 
   }
+
 
   componentDidMount() {
 
@@ -93,6 +102,13 @@ export default class BaseTabs extends Component {
         this.drawer._root.open();
       };
 
+      _logout = ( nav ) => {
+
+        SharedPreferences.removeItem( 'accessToken' );
+        nav.goBack();
+
+      };
+
       return (
         <Root>
           <Drawer
@@ -108,7 +124,7 @@ export default class BaseTabs extends Component {
                       <KajianCard 
                         title={ item.judul_kajian } 
                         lecturer={ item.nama_ustad }
-                        imgSrc={ 'http://placehold.it/350x200' } />
+                        imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
                     </TouchableOpacity>
 
                   }
