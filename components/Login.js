@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, TouchableOpacity } from 'react-native';
+import { Alert, Image, TouchableOpacity, View } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast } from 'native-base';
 
 let SharedPreferences 	= require( 'react-native-shared-preferences' );
@@ -14,7 +14,7 @@ export default class Login extends Component {
 			email: '',
 			password: ''
 		};
-		this._checkAccessToken();
+		// this._checkAccessToken();
 
 	}
 
@@ -39,7 +39,7 @@ export default class Login extends Component {
 			    	
 			    	} else {
 
-			    		// SharedPreferences.removeItem( 'accessToken' );
+			    		SharedPreferences.removeItem( 'accessToken' );
 						Toast.show({
 							text: 'Your access token is expired. Please login again',
 							position: 'bottom',
@@ -107,7 +107,12 @@ export default class Login extends Component {
 		return (
 			<Root>
 				<Container style={{ justifyContent: 'center' }}>
-					<H1 style={{ textAlign: 'center', opacity: 0.6 }}>Aplikasi Kajian Sunnah</H1>
+					<View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
+						<Image 
+							source={require( '../assets/image/logo.jpeg' )}
+							style={{ width: 130, height: 130 }} />
+					</View>
+					<H1 style={{ textAlign: 'center', opacity: 0.6 }}>Aplikasi Ghuroba</H1>
 					<Form>
 						<Item floatingLabel>
 							<Label>Email</Label>

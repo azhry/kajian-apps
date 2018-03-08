@@ -27,6 +27,12 @@ export default class BaseTabs extends Component {
           <Right>
             <TouchableOpacity onPress={ () => this._logout( navigation ) }>
               <Icon
+                name="person"
+                size={ 30 }
+                style={{ color: 'white', marginRight: 28 }} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={ () => this._logout( navigation ) }>
+              <Icon
                 name="md-exit"
                 size={ 30 }
                 style={{ color: 'white' }} />
@@ -105,7 +111,7 @@ export default class BaseTabs extends Component {
       _logout = ( nav ) => {
 
         SharedPreferences.removeItem( 'accessToken' );
-        nav.goBack();
+        nav.navigate( 'Login' );
 
       };
 
