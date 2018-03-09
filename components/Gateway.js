@@ -16,7 +16,7 @@ export default class Gateway extends Component {
 
 		super( props );
 		this.state = {
-			spinner: <Text></Text>
+			spinner: <Text>Ini contoh</Text>
 		};
 
 	}
@@ -75,12 +75,22 @@ export default class Gateway extends Component {
 			    	}
 			    })
 			    .catch(( error ) => {
+		        	
 		        	Toast.show({
 						text: 'Can not connect to server',
 						position: 'bottom',
 						buttonText: 'Close',
 						duration: 10000 // 10 seconds
 			        });
+
+			        const resetAction = NavigationActions.reset({
+		    			index: 0,
+		    			actions: [
+		    				NavigationActions.navigate({ routeName: 'Login' })
+		    			]
+		    		});
+		    		this.props.navigation.dispatch( resetAction );
+		      	
 		      	});
 			} else {
 				const resetAction = NavigationActions.reset({
