@@ -16,7 +16,7 @@ export default class Gateway extends Component {
 
 		super( props );
 		this.state = {
-			spinner: <Text>Ini contoh. Ini contoh2</Text>
+			spinner: <Text>Ini coh2</Text>
 		};
 
 	}
