@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { FlatList, TouchableOpacity, View, NetInfo } from 'react-native';
+import { FlatList, TouchableOpacity, View, Image, WebView } from 'react-native';
 import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast } from 'native-base';
+import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 
@@ -11,21 +12,17 @@ export default class BaseTabs extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      header: (
-        <Header hasTabs>
+      header: () => {
+        return (<Header hasTabs>
           <Left>
-            <TouchableOpacity onPress={ () => this.openDrawer() }>
-              <Icon
-                name="md-menu"
-                size={ 30 }
-                style={{ color: 'white' }} />
-            </TouchableOpacity>
+            <Image source={ require( '../assets/image/logoGh.png' ) }
+              style={{ width: 30, height: 30 }} />
           </Left>
           <Body>
             <Title>Kajian Sunnah</Title>
           </Body>
           <Right>
-            <TouchableOpacity onPress={ () => this._logout( navigation ) }>
+            <TouchableOpacity onPress={ () => navigation.navigate( 'Profile', { userData: navigation.getParam( 'userData' ) } ) }>
               <Icon
                 name="person"
                 size={ 30 }
@@ -39,7 +36,8 @@ export default class BaseTabs extends Component {
             </TouchableOpacity>
           </Right>
         </Header>
-      )
+      );
+      }
     }
   };
 
@@ -49,8 +47,11 @@ export default class BaseTabs extends Component {
 
     this.state = { 
       data: null,
-      connected: false
+      connected: false,
+      videoHeight: 299
     };
+
+    // console.log( this.props.navigation.getParam( 'userData' ) );
 
   }
 
@@ -74,7 +75,6 @@ export default class BaseTabs extends Component {
       .then(( responseJson ) => {
         
         this.setState({ data: responseJson });
-        console.log( responseJson );
       
       })
       .catch(( error ) => {
@@ -111,7 +111,12 @@ export default class BaseTabs extends Component {
       _logout = ( nav ) => {
 
         SharedPreferences.removeItem( 'accessToken' );
-        nav.navigate( 'Login' );
+        nav.dispatch( NavigationActions.reset({
+          index: 0,
+          actions: [
+            NavigationActions.navigate({ routeName: 'Login' })
+          ]
+        }) );
 
       };
 
@@ -123,19 +128,32 @@ export default class BaseTabs extends Component {
             onClose={ () => this.drawer._root.close() }>
             <Container>
               <Content>
-                <FlatList
-                  data={ this.state.data }
-                  renderItem={ ({ item }) =>
-                    <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { item } ) }>
-                      <KajianCard 
-                        title={ item.judul_kajian } 
-                        lecturer={ item.nama_ustad }
-                        imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
-                    </TouchableOpacity>
+                <Tabs initialPage={0}>
+                  <Tab heading="Kajian">
+                    <FlatList
+                      data={ this.state.data }
+                      renderItem={ ({ item }) =>
+                        <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { item } ) }>
+                          <KajianCard 
+                            title={ item.judul_kajian } 
+                            lecturer={ item.nama_ustad }
+                            imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
+                        </TouchableOpacity>
 
-                  }
-                  keyExtractor={ ( item, index ) => index.toString() }
-                />
+                      }
+                      keyExtractor={ ( item, index ) => index.toString() }
+                    />
+                  </Tab>
+                  <Tab heading="Live Streaming">
+                    <View style={{ height: 300 }}>
+                      <WebView
+                        style={{flex:1}}
+                        javaScriptEnabled={true}
+                        source={{uri: 'https://www.youtube.com/embed/wwMDvPCGeE0'}}
+                      />
+                    </View>
+                  </Tab>
+                </Tabs>
               </Content>
             </Container>
           </Drawer>

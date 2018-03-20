@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Alert, Image, TouchableOpacity, View } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast } from 'native-base';
+import { NavigationActions } from 'react-navigation';
 
 let SharedPreferences 	= require( 'react-native-shared-preferences' );
 const BASE_URL  		= 'http://kajian.synapseclc.co.id/';
@@ -14,7 +15,6 @@ export default class Login extends Component {
 			email: '',
 			password: ''
 		};
-		// this._checkAccessToken();
 
 	}
 
@@ -35,7 +35,13 @@ export default class Login extends Component {
 			    .then(( responseJson ) => {
 			    	if ( responseJson.loggedIn ) {
 			    		
-			    		navigate( 'BaseTabs' );
+			    		this.props.navigation.dispatch(NavigationActions.reset({
+			    			index: 0,
+			    			actions: [
+			    				NavigationActions.navigate({ routeName: 'BaseTabs', params: { userData: responseJson.user } })
+			    			]
+			    		}));
+			    		// navigate( 'BaseTabs' );
 			    	
 			    	} else {
 
@@ -109,7 +115,7 @@ export default class Login extends Component {
 				<Container style={{ justifyContent: 'center' }}>
 					<View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
 						<Image 
-							source={require( '../assets/image/logo.jpeg' )}
+							source={require( '../assets/image/logoGh.png' )}
 							style={{ width: 130, height: 130 }} />
 					</View>
 					<H1 style={{ textAlign: 'center', opacity: 0.6 }}>Aplikasi Ghuroba</H1>

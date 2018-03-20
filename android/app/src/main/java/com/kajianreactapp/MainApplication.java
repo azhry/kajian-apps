@@ -3,9 +3,11 @@ package com.kajianreactapp;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.dialogprogress.DialogProgressPackage;
-import com.airbnb.android.react.maps.MapsPackage;
+import com.inprogress.reactnativeyoutube.ReactNativeYouTube;
+import com.oblador.vectoricons.VectorIconsPackage;
 import in.sriraman.sharedpreferences.RNSharedPreferencesReactPackage;
+import com.airbnb.android.react.maps.MapsPackage;
+import com.dialogprogress.DialogProgressPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -26,9 +28,11 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new DialogProgressPackage(),
+            new ReactNativeYouTube(),
+            new VectorIconsPackage(),
+            new RNSharedPreferencesReactPackage(),
             new MapsPackage(),
-            new RNSharedPreferencesReactPackage()
+            new DialogProgressPackage()
       );
     }
 

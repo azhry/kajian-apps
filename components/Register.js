@@ -3,6 +3,7 @@ import { Alert, KeyboardAvoidingView, TouchableOpacity, View, ScrollView } from 
 import { Button, Form, Input, Item, H2, Container, Content, Label, Root, Text, ListItem, Left, Radio, Toast } from 'native-base';
 import RadioForm, { RadioButton, RadioButtonInput, RadioButtonLabel } from 'react-native-simple-radio-button';
 import DialogProgress from 'react-native-dialog-progress';
+import { NavigationActions } from 'react-navigation';
 
 const BASE_URL  		= 'http://kajian.synapseclc.co.id/';
 
@@ -27,37 +28,64 @@ export default class Register extends Component {
 			title: 'Loading',
 			isCancelable: false
 		});
-		const { navigate } 	= this.props.navigation;
-		let nama 			= this.state.nama;
-		let alamat 			= this.state.alamat;
-		let email 			= this.state.email;
-		let password  		= this.state.password;
-		let jenis_kelamin 	= this.state.jenis_kelamin;
-		let nomor_hp 		= this.state.nomor_hp;
 
-		fetch(BASE_URL + 'service/register', {
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: 'nama=' + nama + '&alamat=' + alamat + '&email=' + email + '&password=' + password + '&jenis_kelamin=' + jenis_kelamin + '&nomor_hp=' + nomor_hp
-		})
-		.then(( response ) => response.json())
-		.then(( responseJson ) => {
+		let formValidation = this._validateForm( this.state );
+		if ( formValidation.success ) {
+			const { navigate } 	= this.props.navigation;
+			let nama 			= this.state.nama;
+			let alamat 			= this.state.alamat;
+			let email 			= this.state.email;
+			let password  		= this.state.password;
+			let jenis_kelamin 	= this.state.jenis_kelamin;
+			let nomor_hp 		= this.state.nomor_hp;
 
+			fetch(BASE_URL + 'service/register', {
+				method: 'POST',
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: 'nama=' + nama + '&alamat=' + alamat + '&email=' + email + '&password=' + password + '&jenis_kelamin=' + jenis_kelamin + '&nomor_hp=' + nomor_hp
+			})
+			.then(( response ) => response.json())
+			.then(( responseJson ) => {
+
+				DialogProgress.hide();
+				if ( responseJson.success ) {
+
+					this.props.navigation.dispatch(NavigationActions.reset({
+		    			index: 0,
+		    			actions: [
+		    				NavigationActions.navigate({ routeName: 'Login' })
+		    			]
+		    		}));
+				}
+
+			})
+			.catch(( error ) => {
+
+				DialogProgress.hide();
+				Alert.alert( 'Can not connect to server ' + error.toString() );
+
+			});	
+		} else {
 			DialogProgress.hide();
-			if ( responseJson.success ) {
-				navigate( 'Login' );
-			}
+			Alert.alert( formValidation.message );
+		}
 
-		})
-		.catch(( error ) => {
+		
 
-			DialogProgress.hide();
-			Alert.alert( 'Can not connect to server ' + error.toString() );
+	}
 
-		});
+	_validateForm( formData ) {
+
+		if ( formData.nama == undefined || formData.nama.length <= 0 ) return { success: false, message: 'Nama harus diisi' };
+		if ( formData.alamat == undefined || formData.alamat.length <= 0 ) return { success: false, message: 'Alamat harus diisi' };
+		if ( formData.email == undefined || formData.email.length <= 0 ) return { success: false, message: 'Email harus diisi' };
+		if ( formData.password == undefined || formData.password.length <= 0 ) return { success: false, message: 'Password harus diisi' };
+		if ( formData.nomor_hp == undefined || formData.nomor_hp.length <= 0 ) return { success: false, message: 'Nomor HP harus diisi' };
+
+		return { success: true };
 
 	}
 

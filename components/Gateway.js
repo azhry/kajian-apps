@@ -16,17 +16,17 @@ export default class Gateway extends Component {
 
 		super( props );
 		this.state = {
-			spinner: <Text>Ini cosdjkfskjdhfkjdhntoh. Ini contoh2</Text>
+			spinner: <Text></Text>
 		};
 
 	}
 
 	componentDidMount() {
 
-		// show splash screen for 2.5 seconds
+		// show splash screen for 2.0 seconds
 		setTimeout(() => {
 			this._checkAccessToken();
-		}, 2500);
+		}, 2000);
 
 	}
 
@@ -52,11 +52,10 @@ export default class Gateway extends Component {
 			    .then(( response ) => response.json())
 			    .then(( responseJson ) => {
 			    	if ( responseJson.loggedIn ) {
-			    		
 			    		const resetAction = NavigationActions.reset({
 			    			index: 0,
 			    			actions: [
-			    				NavigationActions.navigate({ routeName: 'BaseTabs' })
+			    				NavigationActions.navigate({ routeName: 'BaseTabs', params: { userData: responseJson.user } })
 			    			]
 			    		});
 			    		this.props.navigation.dispatch( resetAction );
@@ -112,7 +111,7 @@ export default class Gateway extends Component {
 			<Root>
 				<View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
 					<Image 
-						source={require( '../assets/image/logo.jpeg' )}
+						source={require( '../assets/image/logoGh.png' )}
 						style={{ width: 170, height: 170 }} />
 					<View style={{ height: 20 }}>
 						{ this.state.spinner }

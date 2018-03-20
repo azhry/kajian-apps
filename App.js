@@ -7,12 +7,14 @@ import Login from './components/Login';
 import Register from './components/Register';
 import BaseTabs from './components/BaseTabs';
 import KajianDetail from './components/KajianDetail';
+import Profile from './components/Profile';
 
 const App = StackNavigator(
   {
   	Gateway: { screen: Gateway },
     BaseTabs: { screen: BaseTabs },
     KajianDetail: { screen: KajianDetail },
+    Profile: { screen: Profile },
     Login: { screen: Login, navigationOptions: { header: false } },
     Register: { screen: Register, navigationOptions: { header: false } }
   },
@@ -22,3 +24,5 @@ const App = StackNavigator(
 );
 
 export default App;
+
+// https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCLA_DiR1FfKNvjuUpBHmylQ&eventType=live&type=video&key=AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA
