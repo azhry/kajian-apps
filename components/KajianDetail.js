@@ -216,6 +216,7 @@ export default class KajianDetail extends Component {
         }    
     }
 
+
 	render() {
 
 		const { params } = this.props.navigation.state;
@@ -319,7 +320,7 @@ export default class KajianDetail extends Component {
 									<WebView 
 				                        ref={(ref) => { this.videoPlayer = ref;}}
 				                        scalesPageToFit={true} 
-				                        source={{ html: '<html><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /><iframe src="' + this.props.video_url + '?modestbranding=1&playsinline=1&showinfo=0&rel=0" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe></html>'}} 
+				                        source={{ html: '<html><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /><iframe src="' + params.item.video_url + '?modestbranding=1&playsinline=1&showinfo=0&rel=0" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe></html>'}} 
 				                        onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest} //for iOS
 				                        onNavigationStateChange ={this.onShouldStartLoadWithRequest} //for Android
 				                      />
