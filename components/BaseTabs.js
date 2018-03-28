@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { FlatList, TouchableOpacity, View, Image, WebView, Alert } from 'react-native';
+import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar } from 'react-native';
 import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
@@ -18,6 +18,10 @@ export default class BaseTabs extends Component {
     return {
       header: () => {
         return (<Header hasTabs style={{ backgroundColor: '#1aa3ff' }}>
+          <StatusBar
+           backgroundColor="#1aa3ff"
+           barStyle="light-content"
+         />
           <Left>
             <Image source={ require( '../assets/image/logoGh.png' ) }
               style={{ width: 30, height: 30 }} />
@@ -128,7 +132,15 @@ export default class BaseTabs extends Component {
                   size={ 30 }
                   style={{ color: 'white', marginRight: 28 }} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={ () => this._logout( this.props.navigation ) }>
+              <TouchableOpacity onPress={ () => {
+                SharedPreferences.removeItem( 'accessToken' );
+                  this.props.navigation.dispatch( NavigationActions.reset({
+                    index: 0,
+                    actions: [
+                      NavigationActions.navigate({ routeName: 'Login' })
+                    ]
+                }) );
+              } }>
                 <Icon
                   name="md-exit"
                   size={ 30 }
@@ -143,18 +155,6 @@ export default class BaseTabs extends Component {
   }
 
   render() {
-
-    _logout = ( nav ) => {
-
-      SharedPreferences.removeItem( 'accessToken' );
-      nav.dispatch( NavigationActions.reset({
-        index: 0,
-        actions: [
-          NavigationActions.navigate({ routeName: 'Login' })
-        ]
-      }) );
-
-    };
 
     if ( this.state.data == null ) {
 
@@ -183,7 +183,7 @@ export default class BaseTabs extends Component {
             <Container>
               <Content>
                 <Tabs initialPage={0}>
-                  <Tab heading="Kajian">
+                  <Tab heading="Kajian" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
                     <FlatList
                       data={ this.state.data }
                       renderItem={ ({ item }) =>
@@ -200,7 +200,7 @@ export default class BaseTabs extends Component {
                       getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
                     />
                   </Tab>
-                  <Tab heading="Playlist">
+                  <Tab heading="Playlist" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
                     <FlatList
                       data={ this.state.video }
                       renderItem={ ({ item }) =>

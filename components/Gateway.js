@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, Image, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, TouchableOpacity, View, StatusBar } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast, Spinner } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 
@@ -109,6 +109,10 @@ export default class Gateway extends Component {
 
 		return (
 			<Root>
+				<StatusBar
+					backgroundColor="#1aa3ff"
+					barStyle="light-content"
+				/>
 				<View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
 					<Image 
 						source={require( '../assets/image/logoGh.png' )}

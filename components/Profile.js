@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { Root, Text, Header, Left, Icon, Body, Title, Right, Card, CardItem } from 'native-base';
 
 const BASE_URL = 'http://kajian.synapseclc.co.id/';
@@ -9,7 +9,11 @@ export default class Profile extends Component {
 	static navigationOptions = ({ navigation }) => {
 		return {
 			header: (
-				<Header>
+				<Header style={{ backgroundColor: '#1aa3ff' }}>
+					<StatusBar
+						backgroundColor="#1aa3ff"
+						barStyle="light-content"
+					/>
 					<Left>
 						<TouchableOpacity onPress={ () => { navigation.goBack() } }>
 							<Icon 

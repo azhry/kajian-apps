@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, Image, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, TouchableOpacity, View, StatusBar } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 
@@ -112,6 +112,10 @@ export default class Login extends Component {
 
 		return (
 			<Root>
+				<StatusBar
+					backgroundColor="#1aa3ff"
+					barStyle="light-content"
+				/>
 				<Container style={{ justifyContent: 'center' }}>
 					<View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
 						<Image 

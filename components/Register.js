@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, KeyboardAvoidingView, View, ScrollView } from 'react-native';
+import { Alert, KeyboardAvoidingView, View, ScrollView, StatusBar } from 'react-native';
 import { Button, Form, Input, Item, H2, Container, Content, Label, Root, Text, ListItem, Left, Radio, Toast } from 'native-base';
 import RadioForm, { RadioButton, RadioButtonInput, RadioButtonLabel } from 'react-native-simple-radio-button';
 import DialogProgress from 'react-native-dialog-progress';
@@ -93,6 +93,10 @@ export default class Register extends Component {
 
 		return (
 			<Root>
+				<StatusBar
+					backgroundColor="#1aa3ff"
+					barStyle="light-content"
+				/>
 				<ScrollView>
 					<Container style={{ justifyContent: 'center' }}>
 						<KeyboardAvoidingView

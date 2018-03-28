@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView } from 'react-native';
+import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView, StatusBar } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Root, Text, Title, Toast } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -17,6 +17,10 @@ export default class KajianDetail extends Component {
 		return {
 			header: (
 				<Header style={{ backgroundColor: '#1aa3ff' }}>
+					<StatusBar
+			           backgroundColor="#1aa3ff"
+			           barStyle="light-content"
+			        />
 					<Left>
 						<TouchableOpacity onPress={ () => { navigation.goBack() } }>
 							<Icon 
