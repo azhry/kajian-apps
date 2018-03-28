@@ -1,0 +1,37 @@
+{
+  "name": "Kajian_Sunnah",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@mapbox/polyline": "^0.2.0",
+    "babel-plugin-transform-inline-environment-variables": "^0.3.0",
+    "base64-js": "^1.2.3",
+    "buffer": "^5.1.0",
+    "native-base": "^2.3.9",
+    "react": "16.3.0-alpha.1",
+    "react-native": "0.54.0-rc.3",
+    "react-native-app-intro": "^1.1.5",
+    "react-native-dialog-progress": "^1.0.2",
+    "react-native-form-validation": "^1.0.5",
+    "react-native-maps": "^0.20.1",
+    "react-native-shared-preferences": "^1.0.0",
+    "react-native-simple-dialogs": "^0.3.1",
+    "react-native-simple-radio-button": "^2.7.1",
+    "react-native-vector-icons": "^4.5.0",
+    "react-native-youtube": "^1.1.0",
+    "react-navigation": "^1.4.0"
+  },
+  "devDependencies": {
+    "babel-jest": "22.4.1",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.4.2",
+    "react-test-renderer": "16.3.0-alpha.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
