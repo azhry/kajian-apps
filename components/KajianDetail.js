@@ -7,6 +7,7 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { ConfirmDialog } from 'react-native-simple-dialogs';
 import { NavigationActions } from 'react-navigation';
 import { Buffer } from 'buffer';
+import YouTube from 'react-native-youtube';
 
 let SharedPreferences   = require( 'react-native-shared-preferences' );
 const BASE_URL = 'http://kajian.synapseclc.co.id/';
@@ -43,6 +44,9 @@ export default class KajianDetail extends Component {
 
 		let lat = this.props.navigation.state.params.item.latitude == null ? 0 : parseFloat( this.props.navigation.state.params.item.latitude );
 		let lng = this.props.navigation.state.params.item.longitude == null ? 0 : parseFloat( this.props.navigation.state.params.item.longitude );
+
+		lat = isNaN( lat ) ? 0 : lat;
+		lng = isNaN( lng ) ? 0 : lng;
 
 		this.state = {
 			region: {
@@ -128,7 +132,8 @@ export default class KajianDetail extends Component {
 
 			this.setState({
 				attendanceType: responseJson.attendance,
-				attendanceButton: this._rerenderAttendanceButton( responseJson.attendance )
+				attendanceButton: this._rerenderAttendanceButton( responseJson.attendance ),
+				attendance: responseJson.attendance
 			});
 
 		})
@@ -160,7 +165,8 @@ export default class KajianDetail extends Component {
 
 				this.setState({ 
 					attendanceType: attendanceType,
-					attendanceButton: this._rerenderAttendanceButton( attendanceType ) 
+					attendanceButton: this._rerenderAttendanceButton( attendanceType ),
+					attendance: attendanceType
 				});
 
 			})
@@ -204,6 +210,15 @@ export default class KajianDetail extends Component {
 
 		return '';
 
+	}
+
+	_getVideoId( url ) {
+		let video_url = url.split( '/' );
+		if ( video_url.length >= 4 ) {
+			return video_url[4];
+		}
+
+		return '';
 	}
 
 	onShouldStartLoadWithRequest = (navigator) => {
@@ -261,14 +276,14 @@ export default class KajianDetail extends Component {
 							<CardItem>
 								<Body style={ styles.cardBody }>
 									<Grid>
-										<Col style={{ height: 150, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
+										<Col style={{ flex: 1, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
 											<Text style={{ fontSize: 17 }} >
 												<Icon name="md-pin" style={{ fontSize: 23 }} /> Location
 											</Text>
-											<Text>{ params.item.nama_masjid }</Text>
-											<Text>{ params.item.alamat }</Text>
+											<Text style={{ fontSize: 15 }}>{ params.item.nama_masjid }</Text>
+											<Text style={{ fontSize: 15 }}>{ params.item.alamat }</Text>
 										</Col>
-	            						<Col style={{ height: 150, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
+	            						<Col style={{ flex: 1, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
 	            							<Text style={{ fontSize: 17 }} >
 	            								<Icon name="md-calendar" style={{ fontSize: 23 }} /> Date
 	            							</Text>
@@ -302,7 +317,7 @@ export default class KajianDetail extends Component {
 										</Col>
 	            						<Col style={{ padding: 10 }}>
 	        								<Content>
-												{ this.state.attendanceButton }
+												{ this._rerenderAttendanceButton( this.state.attendance ) }
 									        </Content>
 	            						</Col>
 									</Grid>
@@ -317,13 +332,14 @@ export default class KajianDetail extends Component {
 							</CardItem>
 							<CardItem>
 								<View style={{ height: 300 }}>
-									<WebView 
-				                        ref={(ref) => { this.videoPlayer = ref;}}
-				                        scalesPageToFit={true} 
-				                        source={{ html: '<html><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /><iframe src="' + params.item.video_url + '?modestbranding=1&playsinline=1&showinfo=0&rel=0" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe></html>'}} 
-				                        onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest} //for iOS
-				                        onNavigationStateChange ={this.onShouldStartLoadWithRequest} //for Android
-				                      />
+									<YouTube
+							            apiKey='AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA'
+							            videoId={ this._getVideoId( params.item.video_url ) } // The YouTube video ID
+							            play={false}           // control playback of video with true/false
+							            hidden={false}        // control visiblity of the entire view
+							            playsInline={true}    // control whether the video should play inline
+							            style={{alignSelf: 'stretch', height: 300, backgroundColor: 'black', marginVertical: 10}}
+							        />
 				                     <Text style={{ opacity: 0 }}>This is just placeholder text to display youtube video on WebView</Text>
 								</View>
 							</CardItem>

@@ -37,14 +37,8 @@ export default class VideoCard extends Component {
 				</CardItem>
 				<CardItem cardBody>
 					<View style={{ height: 300 }}>
-                      <WebView 
-                        ref={(ref) => { this.videoPlayer = ref;}}
-                        scalesPageToFit={true} 
-                        source={{ html: '<html><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /><iframe src="' + this.props.url + '?modestbranding=1&playsinline=1&showinfo=0&rel=0" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe></html>'}} 
-                        onShouldStartLoadWithRequest={this.onShouldStartLoadWithRequest} //for iOS
-                        onNavigationStateChange ={this.onShouldStartLoadWithRequest} //for Android
-                      />
-                      <Text style={{ opacity: 0 }}>This is just placeholder text to display youtube video on WebView</Text>
+						<Image source={{ uri: 'https://img.youtube.com/vi/' + this.props.id + '/0.jpg' }} style={{ alignSelf: 'stretch', height: 300 }} />
+						<Text style={{ opacity: 0 }}>This is placeholder text to display youtube video</Text>
                     </View>
 				</CardItem>
           	</Card>

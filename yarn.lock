@@ -3985,6 +3985,10 @@ react-native-easy-grid@0.1.17:
   dependencies:
     lodash "^4.11.1"
 
+react-native-form-generator@^0.9.9:
+  version "0.9.9"
+  resolved "https://registry.yarnpkg.com/react-native-form-generator/-/react-native-form-generator-0.9.9.tgz#68aae26d1e8dc3e30073ccd7bb298fbdfdce1bca"
+
 react-native-form-validation@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/react-native-form-validation/-/react-native-form-validation-1.0.5.tgz#cd03035d976cc079bf413e0b039a45fd92b00391"
@@ -4006,6 +4010,13 @@ react-native-maps@^0.20.1:
   dependencies:
     babel-plugin-module-resolver "^2.3.0"
     babel-preset-react-native "1.9.0"
+
+react-native-refreshable-flatlist@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/react-native-refreshable-flatlist/-/react-native-refreshable-flatlist-0.1.1.tgz#9ce34b478d5c8954f9d2290daa5f08e2808c41b9"
+  dependencies:
+    is-promise "^2.1.0"
+    prop-types "^15.6.0"
 
 react-native-safe-area-view@^0.7.0:
   version "0.7.0"

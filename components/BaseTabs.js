@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar } from 'react-native';
-import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast } from 'native-base';
+import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast, Button } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
@@ -46,7 +46,11 @@ export default class BaseTabs extends Component {
       data: null,
       connected: false,
       videoHeight: 299,
-      video: null
+      video: null,
+      kajianLoaded: false,
+      playlistLoaded: false,
+      nextPageToken: null,
+      playlistLoadingMore: false
     };
 
 
@@ -56,7 +60,7 @@ export default class BaseTabs extends Component {
   componentDidMount() {
 
     this._fetchAPI();
-    this._fetchYoutubeVideoAPI();
+    // this._fetchYoutubeVideoAPI();
     this._renderProfileMenu();
 
   }
@@ -73,7 +77,7 @@ export default class BaseTabs extends Component {
       .then(( response ) => response.json())
       .then(( responseJson ) => {
         
-        this.setState({ data: responseJson });
+        this.setState({ data: responseJson, kajianLoaded: true });
       
       })
       .catch(( error ) => {
@@ -91,7 +95,12 @@ export default class BaseTabs extends Component {
 
   _fetchYoutubeVideoAPI() {
 
-    fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCun963voz27VxJXrwkbZ0TA&type=video&key=AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA&maxResults=20', {
+    let url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCun963voz27VxJXrwkbZ0TA&type=video&key=AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA&maxResults=3';
+    if ( this.state.nextPageToken != null ) {
+      url += '&pageToken=' + this.state.nextPageToken;
+    }
+
+    fetch(url, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -102,7 +111,13 @@ export default class BaseTabs extends Component {
       .then(( responseJson ) => {
         
         let res = responseJson;
-        this.setState({ video: res.items });
+        let video = [];
+        if ( this.state.video == null ) {
+          video = res.items;
+        } else {
+          video = this.state.video.concat( res.items );
+        }
+        this.setState({ video: video, playlistLoaded: true, playlistLoadingMore: false, nextPageToken: responseJson.nextPageToken });
       
       })
       .catch(( error ) => {
@@ -119,7 +134,6 @@ export default class BaseTabs extends Component {
   }
 
   _renderProfileMenu() {
-
 
     SharedPreferences.getItem('accessToken', ( value ) => {
       if ( value != undefined ) {
@@ -154,19 +168,87 @@ export default class BaseTabs extends Component {
 
   }
 
+  _onChangeTabHandler(ref) {
+
+    if ( ref.ref.ref == 'playlist' ) {
+      if ( !this.state.playlistLoaded ) {
+        this._fetchYoutubeVideoAPI();
+      }
+    }
+
+  }
+
+  _renderKajian() {
+
+    const { navigate } = this.props.navigation;
+
+    if ( this.state.kajianLoaded ) {
+      return(<FlatList
+        data={ this.state.data }
+        renderItem={ ({ item }) =>
+          <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { item } ) }>
+            <KajianCard 
+              title={ item.judul_kajian } 
+              lecturer={ item.nama_ustad }
+              videoUrl={ item.video_url }
+              imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
+          </TouchableOpacity>
+
+        }
+        keyExtractor={ ( item, index ) => index.toString() }
+        getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
+      />);
+    }
+
+    return(<View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <Spinner color='blue' />
+    </View>);
+
+  }
+
+  _renderPlaylist() {
+
+    if ( this.state.playlistLoaded ) {
+      return(<FlatList
+        data={ this.state.video }
+        renderItem={ ({ item }) =>
+          <VideoCard
+            title={ item.snippet.title }
+            channel={ item.channelTitle }
+            id={ item.id.videoId }
+            url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
+        }
+        keyExtractor={ ( item, index ) => index.toString() }
+        getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
+        ListFooterComponent={() => {
+          if ( this.state.playlistLoadingMore ) {
+            return (
+              <View style={{ flex: 1, padding: 10 }}>
+                <Spinner color='blue' size='small' />
+              </View>
+            );
+          } else {
+            return (
+              <View style={{ flex: 1 }}>
+                <Button full info onPress={() => {
+                  this.setState({ playlistLoadingMore: true }, () => this._fetchYoutubeVideoAPI());
+                }}> 
+                  <Text>Load more</Text>
+                </Button>
+              </View>
+            );
+          }
+        }}
+      />);
+    }
+
+    return(<View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <Spinner color='blue' />
+    </View>);
+
+  }
+
   render() {
-
-    if ( this.state.data == null ) {
-
-      return (
-        <Root>
-          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
-            <Spinner color='blue' />
-          </View>
-        </Root>
-      );
-    
-    } else {
 
       const { navigate } = this.props.navigation;
 
@@ -181,47 +263,22 @@ export default class BaseTabs extends Component {
             content={ <Sidebar navigator={ this.navigator } /> }
             onClose={ () => this.drawer._root.close() }>
             <Container>
-              <Content>
-                <Tabs initialPage={0}>
-                  <Tab heading="Kajian" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
-                    <FlatList
-                      data={ this.state.data }
-                      renderItem={ ({ item }) =>
-                        <TouchableOpacity onPress={ () => navigate( 'KajianDetail', { item } ) }>
-                          <KajianCard 
-                            title={ item.judul_kajian } 
-                            lecturer={ item.nama_ustad }
-                            videoUrl={ item.video_url }
-                            imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
-                        </TouchableOpacity>
-
-                      }
-                      keyExtractor={ ( item, index ) => index.toString() }
-                      getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
-                    />
-                  </Tab>
-                  <Tab heading="Playlist" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
-                    <FlatList
-                      data={ this.state.video }
-                      renderItem={ ({ item }) =>
-                        <VideoCard
-                          title={ item.snippet.title }
-                          channel={ item.channelTitle }
-                          url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
-                      }
-                      keyExtractor={ ( item, index ) => index.toString() }
-                      getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
-                    />
-                    
-                  </Tab>
-                </Tabs>
-              </Content>
+              <Tabs initialPage={0} onChangeTab={( ref ) => this._onChangeTabHandler( ref )}>
+                <Tab ref={ 'kajian' } heading="Kajian" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
+                  <Content>
+                    { this._renderKajian() }
+                  </Content>
+                </Tab>
+                <Tab ref={ 'playlist' } heading="Playlist" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
+                  <View>
+                    { this._renderPlaylist() }  
+                  </View>                  
+                </Tab>
+              </Tabs>
             </Container>
           </Drawer>
         </Root>
       );
-
-    }
     
 
   }
