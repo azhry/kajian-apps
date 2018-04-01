@@ -5,7 +5,6 @@ import android.app.Application;
 import com.facebook.react.ReactApplication;
 import com.inprogress.reactnativeyoutube.ReactNativeYouTube;
 import com.oblador.vectoricons.VectorIconsPackage;
-import in.sriraman.sharedpreferences.RNSharedPreferencesReactPackage;
 import com.airbnb.android.react.maps.MapsPackage;
 import com.dialogprogress.DialogProgressPackage;
 import com.facebook.react.ReactNativeHost;
@@ -30,7 +29,6 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
             new ReactNativeYouTube(),
             new VectorIconsPackage(),
-            new RNSharedPreferencesReactPackage(),
             new MapsPackage(),
             new DialogProgressPackage()
       );

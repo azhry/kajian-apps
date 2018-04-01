@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar } from 'react-native';
+import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar, AsyncStorage } from 'react-native';
 import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast, Button } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 import VideoCard from './VideoCard';
 
-let SharedPreferences   = require( 'react-native-shared-preferences' );
 const BASE_URL          = 'http://kajian.synapseclc.co.id/';
 
 export default class BaseTabs extends Component {
@@ -133,21 +132,42 @@ export default class BaseTabs extends Component {
 
   }
 
-  _renderProfileMenu() {
+  async _setAsyncStorage( key, value ) {
 
-    SharedPreferences.getItem('accessToken', ( value ) => {
-      if ( value != undefined ) {
-        this.props.navigation.setParams({
+    try {
+      await AsyncStorage.setItem( key, value );
+    } catch ( error ) {
+      Alert.alert( '#001. An error occured' );
+    }
+
+  }
+
+  async _removeAsyncStorage( key ) {
+    try {
+      await AsyncStorage.removeItem( key );
+    } catch ( error ) {
+      Alert.alert( '#001. An error occured' );
+    }
+  }
+
+  async _renderProfileMenu() {
+
+    try {
+
+      const access_token = await AsyncStorage.getItem( 'accessToken' );
+      if ( access_token != null ) {
+         this.props.navigation.setParams({
           profileMenu: (
             <Right>
-              <TouchableOpacity onPress={ () => this.props.navigation.navigate( 'Profile', { userData: this.props.navigation.getParam( 'userData' ) } ) }>
-                <Icon
-                  name="person"
-                  size={ 30 }
-                  style={{ color: 'white', marginRight: 28 }} />
-              </TouchableOpacity>
+              {/*<TouchableOpacity onPress={ () => this.props.navigation.navigate( 'Profile', { userData: this.props.navigation.getParam( 'userData' ) } ) }>
+                              <Icon
+                                name="person"
+                                size={ 30 }
+                                style={{ color: 'white', marginRight: 28 }} />
+              </TouchableOpacity>*/}
               <TouchableOpacity onPress={ () => {
-                SharedPreferences.removeItem( 'accessToken' );
+
+                this._removeAsyncStorage( 'accessToken' );
                   this.props.navigation.dispatch( NavigationActions.reset({
                     index: 0,
                     actions: [
@@ -155,16 +175,32 @@ export default class BaseTabs extends Component {
                     ]
                 }) );
               } }>
-                <Icon
-                  name="md-exit"
-                  size={ 30 }
-                  style={{ color: 'white' }} />
+                <Text style={{ color: '#FFF' }}>Logout</Text>
+              </TouchableOpacity>
+            </Right>
+        )});
+      } else {
+        this.props.navigation.setParams({
+          profileMenu: (
+            <Right>
+              {/*<TouchableOpacity onPress={ () => this.props.navigation.navigate( 'Profile', { userData: this.props.navigation.getParam( 'userData' ) } ) }>
+                              <Icon
+                                name="person"
+                                size={ 30 }
+                                style={{ color: 'white', marginRight: 28 }} />
+              </TouchableOpacity>*/}
+              <TouchableOpacity onPress={ () => {
+                this.props.navigation.navigate( 'Login' );
+              } }>
+                <Text style={{ color: '#FFF' }}>Login</Text>
               </TouchableOpacity>
             </Right>
         )});
       }
-    });
-    
+
+    } catch ( error ) {
+      Alert.alert( '#001. An error occured' );
+    }
 
   }
 
@@ -191,6 +227,7 @@ export default class BaseTabs extends Component {
               title={ item.judul_kajian } 
               lecturer={ item.nama_ustad }
               videoUrl={ item.video_url }
+              time={ item.waktu_kajian }
               imgSrc={ BASE_URL + 'assets/uploads/jadwal/' + item.thumbnail } />
           </TouchableOpacity>
 

@@ -12,6 +12,19 @@ export default class KajianCard extends Component {
 		};
 	}
 
+	_parseDateTime( datetime ) {
+		var datetime = datetime.split( ' ' );
+		var month = [ 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember' ];
+		var date = datetime[0].split( '-' );
+		date = date[2] + ' ' + month[date[1].replace(/^0+/, '')] + ' ' + date[0];
+		var time = datetime[1].split( ':' );
+		time = time[0] + ':' + time[1];
+		return {
+			date: date,
+			time: time
+		};
+	}
+
 	render() {
 
 		return (
@@ -26,6 +39,10 @@ export default class KajianCard extends Component {
 					<Body style={ styles.cardBody }>
 						<Text style={ styles.cardTitle }>
 							{ this.props.title }
+						</Text>
+						<Text style={ styles.cardSubtitle }>
+							<Icon name="md-calendar" style={ styles.cardIcon } />
+							{ ' ' + this._parseDateTime( this.props.time ).date + ' Pukul ' + this._parseDateTime( this.props.time ).time }
 						</Text>
 						<Text>
 							<Icon name="person" style={ styles.cardIcon } /> { this.props.lecturer }
@@ -50,6 +67,9 @@ const styles = StyleSheet.create({
 	},
 	cardTitle: {
 		fontWeight: 'bold'
+	},
+	cardSubtitle: {
+		fontSize: 14
 	},
 	cardIcon: {
 		fontSize: 15

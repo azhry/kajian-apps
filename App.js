@@ -4,6 +4,7 @@ import { StackNavigator } from 'react-navigation';
 import { Header, Body, Title, Left, Icon } from 'native-base';
 import Gateway from './components/Gateway';
 import Login from './components/Login';
+import LoginForm from './components/LoginForm';
 import Register from './components/Register';
 import BaseTabs from './components/BaseTabs';
 import KajianDetail from './components/KajianDetail';
@@ -19,7 +20,7 @@ const App = StackNavigator(
     Register: { screen: Register, navigationOptions: { header: false } }
   },
   {
-    initialRouteName: 'Gateway'
+    initialRouteName: 'Login'
   }
 );
 

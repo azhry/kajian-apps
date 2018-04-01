@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { Alert, Image, TouchableOpacity, View, StatusBar } from 'react-native';
+import { Alert, Image, TouchableOpacity, View, StatusBar, KeyboardAvoidingView, StyleSheet, AsyncStorage } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast } from 'native-base';
 import { NavigationActions } from 'react-navigation';
+import LoginForm from './LoginForm';
 
-let SharedPreferences 	= require( 'react-native-shared-preferences' );
 const BASE_URL  		= 'http://kajian.synapseclc.co.id/';
 
 export default class Login extends Component {
@@ -18,11 +18,14 @@ export default class Login extends Component {
 
 	}
 
-	_checkAccessToken() {
+	async _checkAccessToken() {
 
 		const { navigate } = this.props.navigation;
-		SharedPreferences.getItem('accessToken', ( value ) => {
-			if ( value != undefined && value != null ) {
+
+		try {
+			const access_token = await AsyncStorage.getItem( 'accessToken' );
+			if ( access_token != null ) {
+
 				fetch(BASE_URL + 'service/check_access_token', {
 			        method: 'POST',
 			        headers: {
@@ -41,116 +44,77 @@ export default class Login extends Component {
 			    				NavigationActions.navigate({ routeName: 'BaseTabs', params: { userData: responseJson.user } })
 			    			]
 			    		}));
-			    		// navigate( 'BaseTabs' );
 			    	
 			    	} else {
 
-			    		SharedPreferences.removeItem( 'accessToken' );
-						Toast.show({
-							text: 'Your access token is expired. Please login again',
-							position: 'bottom',
-							buttonText: 'Close',
-							duration: 10000 // 10 seconds
-				        });
+			    		this._removeAsyncStorage( 'accessToken' );
+			    		Alert.alert( 'Your access token is expired. Please login again' );
 
 			    	}
 			    })
 			    .catch(( error ) => {
-		        	Toast.show({
-						text: 'Can not connect to server',
-						position: 'bottom',
-						buttonText: 'Close',
-						duration: 10000 // 10 seconds
-			        });
+			    	Alert.alert( 'Can not connect to server' );
 		      	});
+
 			}
-		});
+		} catch ( error ) {
+			Alert.alert( '#001. An error occured' );	
+		}
 
 	}
 
-	_login() {
-
-		const { navigate } = this.props.navigation;
-
-		let email 		= this.state.email;
-		let password 	= this.state.password;
-		fetch(BASE_URL + 'service/login', {
-	        method: 'POST',
-	        headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/x-www-form-urlencoded'
-	        },
-	        body: 'email=' + email + '&password=' + password
-	    })
-	    .then(( response ) => response.json())
-	    .then(( responseJson ) => {
-	    	if ( responseJson.loggedIn ) {
-	    		
-	    		SharedPreferences.setItem( 'accessToken', responseJson.accessToken );
-	    		navigate( 'BaseTabs' );
-	    	
-	    	} else {
-
-	    		Alert.alert( 'Email atau password salah' );
-
-	    	}
-	    })
-	    .catch(( error ) => {
-        	Toast.show({
-				text: 'Can not connect to server' + error.toString(),
-				position: 'bottom',
-				buttonText: 'Close',
-				duration: 10000 // 10 seconds
-	        });
-      	});
+	async _removeAsyncStorage( key ) {
+		try {
+			await AsyncStorage.removeItem( key );
+		} catch ( error ) {
+			Alert.alert( '#001. An error occured' );
+		}
 	}
 
 
 	render() {
 
-		const { navigate } = this.props.navigation;
-
-		return (
-			<Root>
+		return(
+			<KeyboardAvoidingView behavior="padding" style={ styles.container }>
 				<StatusBar
 					backgroundColor="#1aa3ff"
 					barStyle="light-content"
 				/>
-				<Container style={{ justifyContent: 'center' }}>
-					<View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
-						<Image 
-							source={require( '../assets/image/logoGh.png' )}
-							style={{ width: 130, height: 130 }} />
-					</View>
-					<H1 style={{ textAlign: 'center', opacity: 0.6 }}>Aplikasi Ghuroba</H1>
-					<Form>
-						<Item floatingLabel>
-							<Label>Email</Label>
-							<Input
-								onChangeText={( text ) => this.setState({ email: text })} />
-						</Item>
-						<Item floatingLabel last>
-							<Label>Password</Label>
-							<Input 
-								secureTextEntry={ true } 
-								onChangeText={( text ) => this.setState({ password: text })} />
-						</Item>
-						<Button block primary
-							style={{ marginTop: 15 }}
-							onPress={ () => this._login() }>
-							<Text>Login</Text>
-						</Button>
-					</Form>
-					<TouchableOpacity onPress={ () => navigate( 'Register' ) } >
-						<Text 
-							style={{ textAlign: 'center', opacity: 0.6, marginTop: 18, color: '#0275d8' }}>
-							Belum memiliki akun? Sentuh disini untuk mendaftar
-						</Text>
-					</TouchableOpacity>
-				</Container>
-			</Root>
+				<View style={ styles.logoContainer }>
+					<Image
+						style={ styles.logo }
+						source={ require( '../assets/image/logoGh.png' ) } />
+						<Text style={ styles.title }>Aplikasi Ghuroba</Text>
+				</View>
+				<View style={ styles.formContainer }>
+					<LoginForm navigation={ this.props.navigation } />
+				</View>
+			</KeyboardAvoidingView>
 		);
 
 	}
 
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#1aa3ff'
+	},
+	logoContainer: {
+		alignItems: 'center',
+		flexGrow: 1,
+		justifyContent: 'center'
+	},
+	logo: {
+		width: 100,
+		height: 100
+	},
+	title: {
+		color: '#FFF',
+		marginTop: 10,
+		width: 160,
+		textAlign: 'center',
+		opacity: 0.9
+	}
+});

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView, StatusBar } from 'react-native';
+import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView, StatusBar, AsyncStorage } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Root, Text, Title, Toast } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -8,9 +8,10 @@ import { ConfirmDialog } from 'react-native-simple-dialogs';
 import { NavigationActions } from 'react-navigation';
 import { Buffer } from 'buffer';
 import YouTube from 'react-native-youtube';
+import MapViewDirections from 'react-native-maps-directions';
 
-let SharedPreferences   = require( 'react-native-shared-preferences' );
 const BASE_URL = 'http://kajian.synapseclc.co.id/';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBti7Fksn7SsHmULginDq1O5qRqX02t6Qg';
 
 export default class KajianDetail extends Component {
 
@@ -55,27 +56,84 @@ export default class KajianDetail extends Component {
 				latitudeDelta: 0.0922,
 				longitudeDelta: 0.0421,
 			},
+			currentLocation: {
+				latitude: null,
+				longitude: null
+			},
+			error: null,
 			src: BASE_URL + 'assets/uploads/jadwal/' + this.props.navigation.state.params.item.thumbnail,
 			user_id: '',
 			attendance: 2, // no attendance
 			attendanceButton: this._rerenderAttendanceButton( 2 ),
-			dialogVisible: false
+			dialogVisible: false,
+			mapsDialogVisible: false
 		};
+
+		this._getCurrentLocation();
 
 	}
 
-	componentDidMount() {
+	async _getCurrentLocation() {
 
-		SharedPreferences.getItem('accessToken', ( value ) => {
-			if ( value != undefined ) {
-				let tokens = value.split( '.' );
+		try {
+
+			let latitude 	= await AsyncStorage.getItem( 'currentLatitude' );
+			let longitude = await AsyncStorage.getItem( 'currentLongitude' );
+			this.setState({
+				currentLocation: {
+					latitude: parseFloat( latitude ),
+					longitude: parseFloat( longitude )
+				}
+			}, () => {
+				navigator.geolocation.getCurrentPosition(( position ) => {
+						
+					this._setAsyncStorage( 'currentLatitude', position.coords.latitude + '' );
+					this._setAsyncStorage( 'currentLongitude', position.coords.longitude + '' );
+					this.setState({
+						currentLocation: {
+							latitude: position.coords.latitude,
+							longitude: position.coords.longitude
+						}
+					});
+
+				}, ( error ) => {
+					// Alert.alert( '#003. An error occured' );
+				}, 
+				{ enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 });
+			});
+
+		} catch( error ) {
+			Alert.alert( '#001. An error occured' );
+		}
+
+	}
+
+	async _setAsyncStorage( key, value ) {
+
+		try {
+			await AsyncStorage.setItem( key, value );
+		} catch ( error ) {
+			Alert.alert( '#001. An error occured' );
+		}
+
+	}
+
+	async componentDidMount() {
+
+		try {
+			const access_token = await AsyncStorage.getItem( 'accessToken' );
+			if ( access_token != null ) {
+				let tokens = access_token.split( '.' );
 				let user_id =  new Buffer( tokens[0], 'base64' ).toString( 'ascii' );
 				this.setState({ user_id: user_id });
 				this._checkAttendance( user_id );
 			}
-		});
+		} catch ( error ) {
+			Alert.alert( '#001. An error occured' );
+		}
 
 	}
+
 
 	_rerenderAttendanceButton( attendanceType ) {
 
@@ -193,7 +251,8 @@ export default class KajianDetail extends Component {
 		var month = [ 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember' ];
 		var date = datetime[0].split( '-' );
 		date = date[2] + ' ' + month[date[1].replace(/^0+/, '')] + ' ' + date[0];
-		var time = datetime[1];
+		var time = datetime[1].split( ':' );
+		time = time[0] + ':' + time[1];
 		return {
 			date: date,
 			time: time
@@ -231,6 +290,43 @@ export default class KajianDetail extends Component {
         }    
     }
 
+    _renderMaps() {
+
+    	const { params } = this.props.navigation.state;
+    	if ( this.state.mapsDialogVisible ) {
+    		return (
+    			<View style={ styles.container }>
+					<MapView
+						draggable={ false }
+						provider={ PROVIDER_GOOGLE }
+						style={ styles.map }
+						region={ this.state.region }
+						onRegionChangeComplete={() => {
+							this.orgMarker.showCallout();
+						}}>
+						<Marker
+							title={ params.item.nama_masjid }
+							coordinate={ this.state.region }
+							ref={ marker => this.destMarker = marker } />
+						<Marker
+							title="Lokasi Anda"
+							coordinate={ this.state.currentLocation }
+							pinColor={ '#1aa3ff' }
+							ref={ marker => this.orgMarker = marker } />
+						<MapViewDirections
+							origin={ this.state.currentLocation }
+							destination={ this.state.region }
+							apikey={ GOOGLE_MAPS_API_KEY }
+							strokeWidth={ 3 }
+							strokeColor="hotpink" />
+					</MapView>
+				</View>
+    		);
+    	}
+
+    	return null;
+    }
+
 
 	render() {
 
@@ -262,6 +358,21 @@ export default class KajianDetail extends Component {
 					        }
 					    }}
 					/>
+					<ConfirmDialog
+						style={{ flex: 1, height: 400 }}
+					    title="Peta Lokasi"
+					    visible={ this.state.mapsDialogVisible }
+					    onTouchOutside={() => this.setState({ mapsDialogVisible: false })}
+					    positiveButton={{
+					        title: "Tutup",
+					        onPress: () => {
+					        	this.setState({ mapsDialogVisible: false });
+					        }
+					    }}>
+					    <View>
+					    	{ this._renderMaps() }
+					    </View>
+					</ConfirmDialog>
 					<Content>
 						<Card>
 							<CardItem style={ styles.cardBody }>
@@ -274,38 +385,26 @@ export default class KajianDetail extends Component {
 									style={ styles.cardImage } />
 							</CardItem>
 							<CardItem>
+								<Body>
+									<View style={[ styles.cardBody ]}>
+										<Text>
+											<Icon name="md-calendar" style={{ fontSize: 18 }}/> { 'Tanggal '+ this._parseDateTime( params.item.waktu_kajian ).date }
+										</Text>
+										<Text>
+											<Icon name="md-clock" style={{ fontSize: 16 }}/> { 'Pukul ' + this._parseDateTime( params.item.waktu_kajian ).time }
+										</Text>
+										<Text>
+											<Icon name="md-pin" style={{ fontSize: 18 }}/> { params.item.nama_masjid }
+										</Text>
+										<Text style={{ fontSize: 14 }}>{ params.item.alamat }</Text>
+									</View>
+									<Button info small onPress={() => this.setState({ mapsDialogVisible: true })}>
+										<Text>Lihat Peta</Text>
+									</Button>
+								</Body>
+							</CardItem>
+							<CardItem>
 								<Body style={ styles.cardBody }>
-									<Grid>
-										<Col style={{ flex: 1, padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-											<Text style={{ fontSize: 17 }} >
-												<Icon name="md-pin" style={{ fontSize: 23 }} /> Location
-											</Text>
-											<Text style={{ fontSize: 15 }}>{ params.item.nama_masjid }</Text>
-											<Text style={{ fontSize: 15 }}>{ params.item.alamat }</Text>
-										</Col>
-	            						<Col style={{ flex: 1, borderLeftWidth: 0.5, borderLeftColor: '#d6d7da', padding: 10, borderBottomWidth: 0.5, borderBottomColor: '#d6d7da' }}>
-	            							<Text style={{ fontSize: 17 }} >
-	            								<Icon name="md-calendar" style={{ fontSize: 23 }} /> Date
-	            							</Text>
-	            							<Text>{ this._parseDateTime( params.item.waktu_kajian ).date }</Text>
-	            							<Text>{ 'Pukul ' + this._parseDateTime( params.item.waktu_kajian ).time }</Text>
-	            						</Col>
-									</Grid>
-									<Grid>
-										<Col style={{ height: 250 }}>
-											<View style={ styles.container }>
-												<MapView
-													draggable={ false }
-													provider={ PROVIDER_GOOGLE }
-													style={ styles.map }
-													region={ this.state.region }>
-													<Marker
-														title={ params.item.nama_masjid }
-														coordinate={ this.state.region } />
-												</MapView>
-											</View>
-										</Col>
-									</Grid>
 									<Grid>
 										<Col style={{ padding: 10 }}>
 											<Text>
@@ -369,13 +468,20 @@ const styles = StyleSheet.create({
 		opacity: 0.6
 	},
 	container: {
-	    ...StyleSheet.absoluteFillObject,
 	    height: 250,
-	    width: 400,
-	    justifyContent: 'flex-end',
+	    width: 263,
 	    alignItems: 'center',
+	    justifyContent: 'center'
 	},
  	map: {
     	...StyleSheet.absoluteFillObject,
   	}
 });
+
+// <Grid>
+// 										<Col style={{ height: 250 }}>
+											
+// 										</Col>
+// 									</Grid>
+
+// AIzaSyCcsdhzlDXAOHihT8kYUqvxBPhXDv4qtm0

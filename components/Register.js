@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, KeyboardAvoidingView, View, ScrollView, StatusBar } from 'react-native';
+import { Alert, KeyboardAvoidingView, View, ScrollView, StatusBar, StyleSheet, TextInput } from 'react-native';
 import { Button, Form, Input, Item, H2, Container, Content, Label, Root, Text, ListItem, Left, Radio, Toast } from 'native-base';
 import RadioForm, { RadioButton, RadioButtonInput, RadioButtonLabel } from 'react-native-simple-radio-button';
 import DialogProgress from 'react-native-dialog-progress';
@@ -89,67 +89,104 @@ export default class Register extends Component {
 
 	}
 
+	// render() {
+
+	// 	return (
+	// 		<Root>
+	// 			<StatusBar
+	// 				backgroundColor="#1aa3ff"
+	// 				barStyle="light-content"
+	// 			/>
+	// 			<ScrollView>
+	// 				<Container style={{ justifyContent: 'center' }}>
+	// 					<KeyboardAvoidingView
+	// 						behavior='padding' >
+	// 						<H2 style={{ textAlign: 'center', opacity: 0.6 }}>Registrasi Akun</H2>
+	// 						<Form>
+	// 							<Item floatingLabel>
+	// 								<Label>Nama</Label>
+	// 								<Input
+	// 									onChangeText={ ( text ) => this.setState({ nama: text }) } />
+	// 							</Item>
+	// 							<Item floatingLabel>
+	// 								<Label>Alamat</Label>
+	// 								<Input multiline={ true } numberOfLines={ 3 } 
+	// 									onChangeText={ ( text ) => this.setState({ alamat: text }) } />
+	// 							</Item>
+	// 							<Item floatingLabel>
+	// 								<Label>Email</Label>
+	// 								<Input
+	// 									onChangeText={ ( text ) => this.setState({ email: text }) } />
+	// 							</Item>
+	// 							<Item floatingLabel>
+	// 								<Label>Password</Label>
+	// 								<Input secureTextEntry={ true } 
+	// 									onChangeText={ ( text ) => this.setState({ password: text }) } />
+	// 							</Item>
+	// 							<Item>
+	// 								<Label>Jenis Kelamin</Label>
+	// 								<RadioForm
+	// 									radio_props={[
+	// 										{ label: 'Laki-laki', value: 1 },
+	// 										{ label: 'Perempuan', value: 0 }
+	// 									]}
+	// 									formHorizontal={true}
+	// 									onPress={( value ) => { this.setState({ jenis_kelamin: value })} } />
+	// 							</Item>
+	// 							<Item floatingLabel last>
+	// 								<Label>Nomor HP</Label>
+	// 								<Input
+	// 									onChangeText={ ( text ) => this.setState({ nomor_hp: text }) } />
+	// 							</Item>
+	// 							<Button block primary 
+	// 								style={{ marginTop: 15 }}
+	// 								onPress={ () => this._register() } >
+	// 								<Text>Register</Text>
+	// 							</Button>
+	// 						</Form>
+	// 					</KeyboardAvoidingView>
+	// 				</Container>
+	// 			</ScrollView>
+	// 		</Root>
+	// 	);
+
+	// }
+
 	render() {
 
 		return (
-			<Root>
+			<KeyboardAvoidingView behavior="padding" style={ styles.container }>
 				<StatusBar
 					backgroundColor="#1aa3ff"
 					barStyle="light-content"
 				/>
-				<ScrollView>
-					<Container style={{ justifyContent: 'center' }}>
-						<KeyboardAvoidingView
-							behavior='padding' >
-							<H2 style={{ textAlign: 'center', opacity: 0.6 }}>Registrasi Akun</H2>
-							<Form>
-								<Item floatingLabel>
-									<Label>Nama</Label>
-									<Input
-										onChangeText={ ( text ) => this.setState({ nama: text }) } />
-								</Item>
-								<Item floatingLabel>
-									<Label>Alamat</Label>
-									<Input multiline={ true } numberOfLines={ 3 } 
-										onChangeText={ ( text ) => this.setState({ alamat: text }) } />
-								</Item>
-								<Item floatingLabel>
-									<Label>Email</Label>
-									<Input
-										onChangeText={ ( text ) => this.setState({ email: text }) } />
-								</Item>
-								<Item floatingLabel>
-									<Label>Password</Label>
-									<Input secureTextEntry={ true } 
-										onChangeText={ ( text ) => this.setState({ password: text }) } />
-								</Item>
-								<Item>
-									<Label>Jenis Kelamin</Label>
-									<RadioForm
-										radio_props={[
-											{ label: 'Laki-laki', value: 1 },
-											{ label: 'Perempuan', value: 0 }
-										]}
-										formHorizontal={true}
-										onPress={( value ) => { this.setState({ jenis_kelamin: value })} } />
-								</Item>
-								<Item floatingLabel last>
-									<Label>Nomor HP</Label>
-									<Input
-										onChangeText={ ( text ) => this.setState({ nomor_hp: text }) } />
-								</Item>
-								<Button block primary 
-									style={{ marginTop: 15 }}
-									onPress={ () => this._register() } >
-									<Text>Register</Text>
-								</Button>
-							</Form>
-						</KeyboardAvoidingView>
-					</Container>
-				</ScrollView>
-			</Root>
+				<View style={ styles.formContainer }>
+					<TextInput 
+						style={ styles.input }
+						underlineColorAndroid="rgba(0, 0, 0, 0)"
+						placeholder="Email"
+						placeholderTextColor="rgba(255, 255, 255, 0.7)" />
+				</View>
+			</KeyboardAvoidingView>
 		);
 
 	}
 
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#1aa3ff'
+	},
+	formContainer: {
+		padding: 20
+	},
+	input: {
+		height: 40,
+		backgroundColor: 'rgba(255, 255, 255, 0.2)',
+		marginBottom: 20,
+		color: '#FFF',
+		paddingHorizontal: 10
+	}
+});
