@@ -9,18 +9,20 @@ import Register from './components/Register';
 import BaseTabs from './components/BaseTabs';
 import KajianDetail from './components/KajianDetail';
 import Profile from './components/Profile';
+import VideoDetail from './components/VideoDetail';
 
 const App = StackNavigator(
   {
   	Gateway: { screen: Gateway },
     BaseTabs: { screen: BaseTabs },
     KajianDetail: { screen: KajianDetail },
+    VideoDetail: { screen: VideoDetail },
     Profile: { screen: Profile },
     Login: { screen: Login, navigationOptions: { header: false } },
     Register: { screen: Register, navigationOptions: { header: false } }
   },
   {
-    initialRouteName: 'Login'
+    initialRouteName: 'Gateway'
   }
 );
 

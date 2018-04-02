@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar, AsyncStorage } from 'react-native';
+import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar, AsyncStorage, RefreshControl } from 'react-native';
 import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast, Button } from 'native-base';
 import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
@@ -49,7 +49,10 @@ export default class BaseTabs extends Component {
       kajianLoaded: false,
       playlistLoaded: false,
       nextPageToken: null,
-      playlistLoadingMore: false
+      playlistLoadingMore: false,
+      kajianLoadingMore: false,
+      kajianPage: 0,
+      refreshing: true
     };
 
 
@@ -59,14 +62,13 @@ export default class BaseTabs extends Component {
   componentDidMount() {
 
     this._fetchAPI();
-    // this._fetchYoutubeVideoAPI();
     this._renderProfileMenu();
 
   }
 
   _fetchAPI() {
 
-    fetch(BASE_URL + 'service/get_kajian', {
+    fetch(BASE_URL + 'service/get_kajian_per_page?start=' + (this.state.kajianPage * 3) + '&limit=3', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -76,7 +78,14 @@ export default class BaseTabs extends Component {
       .then(( response ) => response.json())
       .then(( responseJson ) => {
         
-        this.setState({ data: responseJson, kajianLoaded: true });
+        let res = responseJson;
+        let kajian = [];
+        if ( this.state.data == null ) {
+          kajian = res;
+        } else {
+          kajian = this.state.data.concat( res );
+        }
+        this.setState({ data: kajian, kajianLoaded: true, kajianLoadingMore: false, kajianPage: this.state.kajianPage + 1, refreshing: false });
       
       })
       .catch(( error ) => {
@@ -234,6 +243,36 @@ export default class BaseTabs extends Component {
         }
         keyExtractor={ ( item, index ) => index.toString() }
         getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
+        // refreshControl={
+        //   <RefreshControl
+        //     refreshing={ this.state.refreshing }
+        //     onRefresh={() => {
+        //       this.setState({ kajianPage: 0, data: null, kajianLoaded: false }, () => {
+        //         this._fetchAPI();
+        //         this.setState({ refreshing: false });
+        //       });
+        //     }}
+        //   />
+        // }
+        ListFooterComponent={() => {
+          if ( this.state.kajianLoadingMore ) {
+            return (
+              <View style={{ flex: 1, padding: 10 }}>
+                <Spinner color='blue' size='small' />
+              </View>
+            );
+          } else {
+            return (
+              <View style={{ flex: 1 }}>
+                <Button full info onPress={() => {
+                  this.setState({ kajianLoadingMore: true }, () => this._fetchAPI());
+                }}> 
+                  <Text>Load more</Text>
+                </Button>
+              </View>
+            );
+          }
+        }}
       />);
     }
 
@@ -245,15 +284,19 @@ export default class BaseTabs extends Component {
 
   _renderPlaylist() {
 
+    const { navigate } = this.props.navigation;
+
     if ( this.state.playlistLoaded ) {
       return(<FlatList
         data={ this.state.video }
         renderItem={ ({ item }) =>
-          <VideoCard
-            title={ item.snippet.title }
-            channel={ item.channelTitle }
-            id={ item.id.videoId }
-            url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
+          <TouchableOpacity onPress={ () => navigate( 'VideoDetail', { item } ) }>
+            <VideoCard
+              title={ item.snippet.title }
+              channel={ item.channelTitle }
+              id={ item.id.videoId }
+              url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
+          </TouchableOpacity>
         }
         keyExtractor={ ( item, index ) => index.toString() }
         getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
@@ -302,9 +345,9 @@ export default class BaseTabs extends Component {
             <Container>
               <Tabs initialPage={0} onChangeTab={( ref ) => this._onChangeTabHandler( ref )}>
                 <Tab ref={ 'kajian' } heading="Kajian" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
-                  <Content>
+                  <View style={{ flex: 1 }}>
                     { this._renderKajian() }
-                  </Content>
+                  </View>
                 </Tab>
                 <Tab ref={ 'playlist' } heading="Playlist" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
                   <View>

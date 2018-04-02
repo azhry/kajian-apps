@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, TextInput, TouchableNativeFeedback, Text, Alert, ActivityIndicator, AsyncStorage } from 'react-native';
+import { Icon } from 'native-base';
+import { NavigationActions } from 'react-navigation';
 
 const BASE_URL  		= 'http://kajian.synapseclc.co.id/';
 
@@ -47,7 +49,12 @@ export default class LoginForm extends Component {
 	    		try {
 
 	    			this._setAsyncStorage( 'accessToken', responseJson.accessToken );
-	    			navigate( 'BaseTabs' );
+	    			this.props.navigation.dispatch(NavigationActions.reset({
+		    			index: 0,
+		    			actions: [
+		    				NavigationActions.navigate({ routeName: 'BaseTabs' })
+		    			]
+		    		}));
 
 	    		} catch ( error ) {
 	    			Alert.alert( '#001. An error occured' );
@@ -107,6 +114,7 @@ export default class LoginForm extends Component {
 					keyboardType="email-address"
 					autoCapitalize="none"
 					autoCorrect={ false }
+					blurOnSubmit={ false }
 					onSubmitEditing={() => this.passwordInput.focus()}
 					underlineColorAndroid="rgba(0, 0, 0, 0)"
 					onChangeText={( text ) => this.setState({ email: text })} />
@@ -125,7 +133,20 @@ export default class LoginForm extends Component {
 					onPress={() => this._login()}
 					background={TouchableNativeFeedback.SelectableBackground()}>
 					<View style={ styles.buttonContainer }>
-						<Text style={ styles.buttonText }>LOGIN</Text>
+						<Text style={ styles.buttonText }>MASUK</Text>
+					</View>
+				</TouchableNativeFeedback>
+
+				<TouchableNativeFeedback 
+					onPress={() => this.props.navigation.dispatch(NavigationActions.reset({
+		    			index: 0,
+		    			actions: [
+		    				NavigationActions.navigate({ routeName: 'BaseTabs' })
+		    			]
+		    		}))}
+					backgroundColor={TouchableNativeFeedback.SelectableBackground()}>
+					<View style={ styles.goToTabsContainer }>
+						<Text style={ styles.registerText }>Kembali ke beranda <Icon style={ styles.iconArrowForward } name="md-arrow-forward" /></Text>
 					</View>
 				</TouchableNativeFeedback>
 
@@ -166,7 +187,10 @@ const styles = StyleSheet.create({
 		fontWeight: '700'
 	},
 	registerContainer: {
-		marginVertical: 40
+		marginVertical: 20
+	},
+	goToTabsContainer: {
+		marginVertical: 15
 	},
 	registerText: {
 		textAlign: 'center',
@@ -175,5 +199,10 @@ const styles = StyleSheet.create({
 	},
 	indicatorContainer: {
 		marginTop: 25
+	},
+	iconArrowForward: {
+		color: '#FFF',
+		fontSize: 15,
+		opacity: 0.9
 	}
 });
