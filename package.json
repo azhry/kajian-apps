@@ -16,6 +16,7 @@
     "react-native": "0.54.0-rc.3",
     "react-native-app-intro": "^1.1.5",
     "react-native-dialog-progress": "^1.0.2",
+    "react-native-firebase": "^4.0.3",
     "react-native-form-generator": "^0.9.9",
     "react-native-form-validation": "^1.0.5",
     "react-native-maps": "^0.20.1",
