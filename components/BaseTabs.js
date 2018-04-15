@@ -5,6 +5,7 @@ import { NavigationActions } from 'react-navigation';
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 import VideoCard from './VideoCard';
+import firebase, { Notification, NotificationOpen } from 'react-native-firebase';
 
 const BASE_URL          = 'http://kajian.synapseclc.co.id/';
 
@@ -55,14 +56,69 @@ export default class BaseTabs extends Component {
       refreshing: true
     };
 
+    firebase.messaging().hasPermission()
+      .then(( enabled ) => {
+
+        if ( enabled ) {
+
+          console.log( 'FIREBASE PERMISSION GRANTED' );
+
+        } else {
+
+          firebase.messaging.requestPermission()
+            .then(() => {
+
+              console.log( 'FIREBASE PERMISSION GRANTED' );
+
+            })
+            .catch(( error ) => {
+              console.log( error );
+            });
+
+        }
+
+      });
 
   }
 
 
   componentDidMount() {
 
+    this.notificationDisplayedListener = firebase.notifications().onNotificationDisplayed(( notification: Notification ) => {
+
+      // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification
+      console.log( 'NOTIFICATION DISPLAYED' );
+      console.log( notification );
+
+    });
+
+    this.notificationListener = firebase.notifications().onNotification(( notification: Notification ) => {
+      
+      console.log( 'NOTIFIED' );
+      console.log( notification );
+
+    });
+
+    this.notificationOpenedListener = firebase.notifications().onNotificationOpened(( notificationOpen: NotificationOpen ) => {
+
+        console.log( 'NOTIFICATION OPENED!' );
+        // Get the action triggered by the notification being opened
+        const action = notificationOpen.action;
+        // Get information about the notification that was opened
+        const notification: Notification = notificationOpen.notification;
+
+    });
+
     this._fetchAPI();
     this._renderProfileMenu();
+
+  }
+
+  componentWillUnmount() {
+
+    this.notificationDisplayedListener();
+    this.notificationListener();
+    this.notificationOpenedListener();
 
   }
 

@@ -57,8 +57,8 @@ export default class KajianDetail extends Component {
 				longitudeDelta: 0.0421,
 			},
 			currentLocation: {
-				latitude: null,
-				longitude: null
+				latitude: 0,
+				longitude: 0
 			},
 			error: null,
 			src: BASE_URL + 'assets/uploads/jadwal/' + this.props.navigation.state.params.item.thumbnail,
@@ -78,7 +78,7 @@ export default class KajianDetail extends Component {
 		try {
 
 			let latitude 	= await AsyncStorage.getItem( 'currentLatitude' );
-			let longitude = await AsyncStorage.getItem( 'currentLongitude' );
+			let longitude 	= await AsyncStorage.getItem( 'currentLongitude' );
 			this.setState({
 				currentLocation: {
 					latitude: parseFloat( latitude ),
@@ -86,7 +86,6 @@ export default class KajianDetail extends Component {
 				}
 			}, () => {
 				navigator.geolocation.getCurrentPosition(( position ) => {
-						
 					this._setAsyncStorage( 'currentLatitude', position.coords.latitude + '' );
 					this._setAsyncStorage( 'currentLongitude', position.coords.longitude + '' );
 					this.setState({
@@ -97,9 +96,9 @@ export default class KajianDetail extends Component {
 					});
 
 				}, ( error ) => {
-					// Alert.alert( '#003. An error occured' );
+					Alert.alert( '#003. An error occured' );
 				}, 
-				{ enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 });
+				{ enableHighAccuracy: false, timeout: 20000 });
 			});
 
 		} catch( error ) {

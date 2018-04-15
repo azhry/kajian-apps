@@ -135,7 +135,7 @@ export default class Gateway extends Component {
 					}, ( error ) => {
 						Alert.alert( '#003. An error occured' );
 					}, 
-					{ enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 });
+					{ enableHighAccuracy: false, timeout: 20000 });
 
 				} else {
 					Alert.alert( 'Location permission denied' );
