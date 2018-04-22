@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "159160025010",
+    "firebase_url": "https://ghurob-a39e4.firebaseio.com",
+    "project_id": "ghurob-a39e4",
+    "storage_bucket": "ghurob-a39e4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:159160025010:android:5e6438db7f73576a",
+        "android_client_info": {
+          "package_name": "com.kajianreactapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "159160025010-v05t84llos8edgi82q270mbcs57nq5ao.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtaqkJVNH70gaiGAAcrf4krPAZwa6C9Cw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
