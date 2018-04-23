@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar, AsyncStorage, RefreshControl } from 'react-native';
+import { FlatList, TouchableOpacity, View, Image, WebView, Alert, StatusBar, AsyncStorage, RefreshControl, AppState } from 'react-native';
 import { Body, Container, Content, Drawer, Header, Icon, Left, Right, Root, Spinner, Tab, Tabs, Text, Title, Toast, Button } from 'native-base';
 import { NavigationActions } from 'react-navigation';
+import FCM, { FCMEvent, NotificationActionType } from 'react-native-fcm';
 import Sidebar from './Sidebar';
 import KajianCard from './KajianCard';
 import VideoCard from './VideoCard';
@@ -51,9 +52,36 @@ export default class BaseTabs extends Component {
       playlistLoadingMore: false,
       kajianLoadingMore: false,
       kajianPage: 0,
-      refreshing: true
+      refreshing: true,
+      notificationOn: true
     };
 
+  }
+
+  async componentWillMount() {
+    try {
+      let notificationOn = await AsyncStorage.getItem( 'notificationOn' );
+      if ( notificationOn == null ) {
+
+        await AsyncStorage.setItem( 'notificationOn', JSON.stringify( true ) );
+        this.setState({ notificationOn: true });
+        FCM.subscribeToTopic( 'kajian' );
+        FCM.setBadgeNumber( 0 );
+
+      } else {
+
+        if ( notificationOn == 'false' ) {
+          this.setState({ notificationOn: false });
+          FCM.unsubscribeFromTopic( 'kajian' );
+        } else {
+          this.setState({ notificationOn: true });
+          FCM.subscribeToTopic( 'kajian' );
+        }
+
+      }
+    } catch ( error ) {
+      Alert.alert( '#001. An error occured' );
+    }
   }
 
 
@@ -61,6 +89,49 @@ export default class BaseTabs extends Component {
 
     this._fetchAPI();
     this._renderProfileMenu();
+
+    FCM.on(FCMEvent.Notification, ( notif ) => {
+
+      if ( notif.opened_from_tray ) {
+
+        let item = notif.data;
+        this.props.navigation.navigate( 'KajianDetail', { item } );
+
+      } else {
+        FCM.presentLocalNotification({
+          id: new Date().valueOf().toString(),                // (optional for instant notification)
+          title: 'Ghuroba',             // as FCM payload
+          body: 'Kajian terbaru: ' + notif.fcm.body,                       // as FCM payload (required)
+          sound: "bell.mp3",                                  // "default" or filename
+          priority: "high",                                   // as FCM payload
+          tag: 'kajian_terbaru',
+          ticker: 'Kajian terbaru: ' + notif.fcm.body,                   // Android only
+          auto_cancel: true,                                  // Android only (default true)
+          large_icon: "logogh",                           // Android only
+          icon: "logogh",                                // as FCM payload, you can relace this with custom icon you put in mipmap
+          color: "red",                                       // Android only
+          vibrate: 300,                                       // Android only default: 300, no vibration if you pass 0
+          wake_screen: true,                                  // Android only, wake up screen when notification arrives
+          group: "group",                                     // Android only
+          picture: "https://google.png",                      // Android only bigPicture style
+          ongoing: false,                                      // Android only
+          data: {
+            nama_masjid: notif.nama_masjid,
+            video_url: notif.video_url,
+            thumbnail: notif.thumbnail,
+            waktu_kajian: notif.waktu_kajian,
+            latitude: notif.latitude,
+            longitude: notif.longitude,
+            judul_kajian: notif.judul_kajian,
+            alamat: notif.alamat,
+            id_jadwal: notif.id_jadwal
+          },             
+          lights: true,                                       // Android only, LED blinking (default false)
+          show_in_foreground: true                           // notification when app is in foreground (local & remote)
+        });
+      }
+
+    });
 
   }
 
@@ -166,12 +237,7 @@ export default class BaseTabs extends Component {
          this.props.navigation.setParams({
           profileMenu: (
             <Right>
-              {/*<TouchableOpacity onPress={ () => this.props.navigation.navigate( 'Profile', { userData: this.props.navigation.getParam( 'userData' ) } ) }>
-                              <Icon
-                                name="person"
-                                size={ 30 }
-                                style={{ color: 'white', marginRight: 28 }} />
-              </TouchableOpacity>*/}
+              { this._renderNotificationIcon() }
               <TouchableOpacity onPress={ () => {
 
                 this._removeAsyncStorage( 'accessToken' );
@@ -190,12 +256,7 @@ export default class BaseTabs extends Component {
         this.props.navigation.setParams({
           profileMenu: (
             <Right>
-              {/*<TouchableOpacity onPress={ () => this.props.navigation.navigate( 'Profile', { userData: this.props.navigation.getParam( 'userData' ) } ) }>
-                              <Icon
-                                name="person"
-                                size={ 30 }
-                                style={{ color: 'white', marginRight: 28 }} />
-              </TouchableOpacity>*/}
+              { this._renderNotificationIcon() }
               <TouchableOpacity onPress={ () => {
                 this.props.navigation.navigate( 'Login' );
               } }>
@@ -207,6 +268,53 @@ export default class BaseTabs extends Component {
 
     } catch ( error ) {
       Alert.alert( '#001. An error occured' );
+    }
+
+  }
+
+  _renderNotificationIcon() {
+
+    if ( this.state.notificationOn ) {
+      return (
+        <TouchableOpacity onPress={ () => this._toggleNotification() }>
+          <Icon
+            name="notifications"
+            size={ 30 }
+            style={{ color: 'white', marginRight: 28 }} />
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity onPress={ () => this._toggleNotification() }>
+          <Icon
+            name="notifications-off"
+            size={ 30 }
+            style={{ color: 'white', marginRight: 28 }} />
+        </TouchableOpacity>
+      );
+    }
+
+  }
+
+  async _toggleNotification() {
+
+    try {
+      let notificationOn = await AsyncStorage.getItem( 'notificationOn' );
+      if ( notificationOn == 'true' ) {
+        this.setState({ notificationOn: false }, () => {
+          this._renderProfileMenu();
+          FCM.unsubscribeFromTopic( 'kajian' );
+        });
+        await AsyncStorage.setItem( 'notificationOn', JSON.stringify( false ) );
+      } else {
+        this.setState({ notificationOn: true }, () => {
+          this._renderProfileMenu();
+          FCM.subscribeToTopic( 'kajian' );
+        });
+        await AsyncStorage.setItem( 'notificationOn', JSON.stringify( true ) );
+      }
+    } catch ( error ) {
+     Alert.alert( '#001. An error occured' ); 
     }
 
   }
