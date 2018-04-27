@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import { Alert, Image, TouchableOpacity, View, StatusBar, AsyncStorage, PermissionsAndroid } from 'react-native';
 import { Button, Form, Input, Item, H1, Container, Label, Root, Text, Toast, Spinner } from 'native-base';
 import { NavigationActions } from 'react-navigation';
+import Geolocation from 'react-native-geolocation-service';
 
-const BASE_URL  		= 'http://kajian.synapseclc.co.id/';
+const BASE_URL  		= 'https://kajian.synapseclc.co.id/';
 
 export default class Gateway extends Component {
 
@@ -127,14 +128,17 @@ export default class Gateway extends Component {
 					}
 				);
 				if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-					navigator.geolocation.getCurrentPosition(( position ) => {
 
+					Geolocation.getCurrentPosition(( position ) => {
+						
 						this._setAsyncStorage( 'currentLatitude', position.coords.latitude + '' );
 						this._setAsyncStorage( 'currentLongitude', position.coords.longitude + '' );
 
 					}, ( error ) => {
-						Alert.alert( '#003. An error occured' );
-					}, 
+
+						Alert.alert( '#003. Geolocation timeout' );
+
+					},
 					{ enableHighAccuracy: false, timeout: 20000 });
 
 				} else {
@@ -143,15 +147,17 @@ export default class Gateway extends Component {
 
 			} else {
 
-				navigator.geolocation.getCurrentPosition(( position ) => {
+				Geolocation.getCurrentPosition(( position ) => {
 						
 					this._setAsyncStorage( 'currentLatitude', position.coords.latitude + '' );
 					this._setAsyncStorage( 'currentLongitude', position.coords.longitude + '' );
 
 				}, ( error ) => {
-					Alert.alert( '#003. An error occured' );
-				}, 
-				{ enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 });
+
+					Alert.alert( '#003. Geolocation timeout' );
+
+				},
+				{ enableHighAccuracy: false, timeout: 20000 });
 
 			}
 			

@@ -58,6 +58,15 @@ export default class BaseTabs extends Component {
 
   }
 
+  shouldComponentUpdate( nextProps, nextState ) {
+
+    if ( this.state.notificationOn !== nextState.notificationOn ) {
+      return false;
+    }
+    return true
+
+  }
+
   async componentWillMount() {
     try {
       let notificationOn = await AsyncStorage.getItem( 'notificationOn' );
@@ -172,7 +181,7 @@ export default class BaseTabs extends Component {
 
   _fetchYoutubeVideoAPI() {
 
-    let url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCun963voz27VxJXrwkbZ0TA&type=video&key=AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA&maxResults=3';
+    let url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCW-4tOwjHOgmxY0PGfqktRQ&type=video&key=AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA&maxResults=3';
     if ( this.state.nextPageToken != null ) {
       url += '&pageToken=' + this.state.nextPageToken;
     }
@@ -393,39 +402,54 @@ export default class BaseTabs extends Component {
     const { navigate } = this.props.navigation;
 
     if ( this.state.playlistLoaded ) {
-      return(<FlatList
-        data={ this.state.video }
-        renderItem={ ({ item }) =>
-          <TouchableOpacity onPress={ () => navigate( 'VideoDetail', { item } ) }>
-            <VideoCard
-              title={ item.snippet.title }
-              channel={ item.channelTitle }
-              id={ item.id.videoId }
-              url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
-          </TouchableOpacity>
-        }
-        keyExtractor={ ( item, index ) => index.toString() }
-        getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
-        ListFooterComponent={() => {
-          if ( this.state.playlistLoadingMore ) {
-            return (
-              <View style={{ flex: 1, padding: 10 }}>
-                <Spinner color='blue' size='small' />
-              </View>
-            );
-          } else {
-            return (
-              <View style={{ flex: 1 }}>
-                <Button full info onPress={() => {
-                  this.setState({ playlistLoadingMore: true }, () => this._fetchYoutubeVideoAPI());
-                }}> 
-                  <Text>Load more</Text>
-                </Button>
-              </View>
-            );
-          }
-        }}
-      />);
+
+      if ( this.state.video.length > 0 ) {
+
+        return(
+          <View>
+            <FlatList
+            data={ this.state.video }
+            renderItem={ ({ item }) =>
+              <TouchableOpacity onPress={ () => navigate( 'VideoDetail', { item } ) }>
+                <VideoCard
+                  title={ item.snippet.title }
+                  channel={ item.channelTitle }
+                  id={ item.id.videoId }
+                  url={ 'https://www.youtube.com/embed/' + item.id.videoId } />
+              </TouchableOpacity>
+            }
+            keyExtractor={ ( item, index ) => index.toString() }
+            getItemLayout={ (data, index) => ({ length: 400, offset: 50 * index, index }) }
+            ListFooterComponent={() => {
+              if ( this.state.playlistLoadingMore ) {
+                return (
+                  <View style={{ flex: 1, padding: 10 }}>
+                    <Spinner color='blue' size='small' />
+                  </View>
+                );
+              } else {
+                return (
+                  <View style={{ flex: 1 }}>
+                    <Button full info onPress={() => {
+                      this.setState({ playlistLoadingMore: true }, () => this._fetchYoutubeVideoAPI());
+                    }}> 
+                      <Text>Load more</Text>
+                    </Button>
+                  </View>
+                );
+              }
+            }}
+          />
+        </View>);
+
+      } 
+      
+      return (
+        <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ alignSelf: 'center' }}>Playlist ini belum memiliki konten</Text>
+        </View>
+      );
+
     }
 
     return(<View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -456,9 +480,7 @@ export default class BaseTabs extends Component {
                   </View>
                 </Tab>
                 <Tab ref={ 'playlist' } heading="Playlist" tabStyle={{ backgroundColor: '#1aa3ff' }} activeTabStyle={{ backgroundColor: '#1aa3ff' }}>
-                  <View>
                     { this._renderPlaylist() }  
-                  </View>                  
                 </Tab>
               </Tabs>
             </Container>

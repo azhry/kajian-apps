@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView, StatusBar, AsyncStorage } from 'react-native';
+import { Dimensions, Alert, Image, TouchableOpacity, StyleSheet, View, WebView, StatusBar, AsyncStorage, Linking } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import { Body, Button, Card, CardItem, Content, Container, H3, Header, Left, Right, Root, Text, Title, Toast } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -9,6 +9,8 @@ import { NavigationActions } from 'react-navigation';
 import { Buffer } from 'buffer';
 import YouTube from 'react-native-youtube';
 import MapViewDirections from 'react-native-maps-directions';
+import LocationServicesDialogBox from 'react-native-android-location-services-dialog-box';
+import Geolocation from 'react-native-geolocation-service';
 
 const BASE_URL = 'http://kajian.synapseclc.co.id/';
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBti7Fksn7SsHmULginDq1O5qRqX02t6Qg';
@@ -66,10 +68,26 @@ export default class KajianDetail extends Component {
 			attendance: 2, // no attendance
 			attendanceButton: this._rerenderAttendanceButton( 2 ),
 			dialogVisible: false,
-			mapsDialogVisible: false
+			mapsDialogVisible: false,
+			mapsDialogView: <Text>You must enable GPS and Network in order to view maps</Text>
 		};
 
+
 		this._getCurrentLocation();
+
+	}
+
+	shouldComponentUpdate( nextProps, nextState ) {
+
+		if ( this.state.user_id !== nextState.user_id ) {
+			return false;
+		}
+
+		if ( this.state.currentLocation !== nextState.currentLocation ) {
+			return false;
+		}
+
+		return true;
 
 	}
 
@@ -85,9 +103,12 @@ export default class KajianDetail extends Component {
 					longitude: parseFloat( longitude )
 				}
 			}, () => {
-				navigator.geolocation.getCurrentPosition(( position ) => {
+
+				Geolocation.getCurrentPosition(( position ) => {
+						
 					this._setAsyncStorage( 'currentLatitude', position.coords.latitude + '' );
 					this._setAsyncStorage( 'currentLongitude', position.coords.longitude + '' );
+
 					this.setState({
 						currentLocation: {
 							latitude: position.coords.latitude,
@@ -96,8 +117,10 @@ export default class KajianDetail extends Component {
 					});
 
 				}, ( error ) => {
-					Alert.alert( '#003. An error occured' );
-				}, 
+
+					Alert.alert( '#003. Geolocation timeout' );
+
+				},
 				{ enableHighAccuracy: false, timeout: 20000 });
 			});
 
@@ -279,22 +302,13 @@ export default class KajianDetail extends Component {
 		return '';
 	}
 
-	onShouldStartLoadWithRequest = (navigator) => {
-        if (navigator.url.indexOf('embed') !== -1
-        ) {
-            return true;
-        } else {
-            this.videoPlayer.stopLoading(); //Some reference to your WebView to make it stop loading that URL
-            return false;
-        }    
-    }
-
     _renderMaps() {
 
     	const { params } = this.props.navigation.state;
     	if ( this.state.mapsDialogVisible ) {
-    		return (
-    			<View style={ styles.container }>
+
+    		this.setState({ mapsDialogView: (
+        		<View style={ styles.container }>
 					<MapView
 						draggable={ false }
 						provider={ PROVIDER_GOOGLE }
@@ -320,10 +334,85 @@ export default class KajianDetail extends Component {
 							strokeColor="hotpink" />
 					</MapView>
 				</View>
-    		);
+        	) });
+    		
+    	} else {
+    		this.setState({ mapsDialogView: <Text>You must enable GPS and Network Connection in order to view maps</Text> });
     	}
 
-    	return null;
+    }
+
+    _checkLocationService() {
+    	LocationServicesDialogBox.checkLocationServicesIsEnabled({
+	        message: "<h2>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/>",
+	        ok: "YES",
+	        cancel: "NO",
+	        enableHighAccuracy: true, // true => GPS AND NETWORK PROVIDER, false => GPS OR NETWORK PROVIDER
+	        showDialog: true, // false => Opens the Location access page directly
+	        openLocationServices: true, // false => Directly catch method is called if location services are turned off
+	        preventOutSideTouch: false, //true => To prevent the location services window from closing when it is clicked outside
+	        preventBackClick: false //true => To prevent the location services popup from closing when it is clicked back button
+	    }).then(( success ) => {
+
+	    	this.setState({ mapsDialogVisible: true }, () => {
+	    		if ( success.enabled ) {
+	    			
+	    			if ( this.state.region.latitude == 0 && this.state.region.longitude == 0 ) {
+
+	    				this.setState({ mapsDialogView: <Text>Lokasi kajian gagal ditemukan. Sepertinya penyelenggara kajian tidak memasukkan koordinat lokasi</Text> });
+	    			
+	    			} else {
+	    			
+	    				this._renderMaps();
+	    			
+	    			}
+
+	    		} else {
+	    			this.setState({ mapsDialogView: <Text>You must enable GPS and Network Connection in order to view maps</Text> });
+	    		}
+	    	});
+
+
+	    }).catch((error) => {
+
+	    	this.setState({ mapsDialogVisible: true, mapsDialogView: <Text>You must enable GPS and Network Connection in order to view maps</Text> });
+	    });
+    }
+
+    _renderLiveVideo( videoUrl ) {
+
+    	if ( this.state.user_id != '' ) {
+
+    		if ( videoUrl == '' || videoUrl == undefined ) {
+
+    			return (
+    				<Text>
+    					Kajian ini tidak memiliki live video. Anda dapat melihat video kajian yang lain melalui facebook dengan klik <Text style={{ color: '#3498db' }} onPress={() => Linking.openURL( 'https://www.facebook.com/annur.ghuroba.9?hc_ref=ART-nc2fesrI4e4K_Xk8oGvhmqNkeAhqFZNwsIJd1CMupGzsKnzJ_RrVkF1b34R--A8' ).catch(( err ) => { alert( '#004. An error occured' ); })}>disini</Text>
+    				</Text>
+    			);
+
+    		}
+
+    		return (
+    			<View style={{ height: 300 }}>
+					<YouTube
+			            apiKey='AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA'
+			            videoId={ this._getVideoId( videoUrl ) } // The YouTube video ID
+			            play={false}           // control playback of video with true/false
+			            hidden={false}        // control visiblity of the entire view
+			            playsInline={true}    // control whether the video should play inline
+			            style={{alignSelf: 'stretch', height: 300, backgroundColor: 'black', marginVertical: 10}}
+			        />
+                     <Text style={{ opacity: 0 }}>This is just placeholder text to display youtube video on WebView</Text>
+				</View>
+    		);
+
+    	} 
+
+    	return (
+    		<Text>Anda harus login terlebih dahulu agar dapat melihat live video</Text>
+    	);
+
     }
 
 
@@ -369,7 +458,7 @@ export default class KajianDetail extends Component {
 					        }
 					    }}>
 					    <View>
-					    	{ this._renderMaps() }
+					    	{ this.state.mapsDialogView }
 					    </View>
 					</ConfirmDialog>
 					<Content>
@@ -397,7 +486,7 @@ export default class KajianDetail extends Component {
 										</Text>
 										<Text style={{ fontSize: 14 }}>{ params.item.alamat }</Text>
 									</View>
-									<Button info small onPress={() => this.setState({ mapsDialogVisible: true })}>
+									<Button info small onPress={() => this._checkLocationService()}>
 										<Text>Lihat Peta</Text>
 									</Button>
 								</Body>
@@ -429,17 +518,7 @@ export default class KajianDetail extends Component {
 								</Body>
 							</CardItem>
 							<CardItem>
-								<View style={{ height: 300 }}>
-									<YouTube
-							            apiKey='AIzaSyDV1CNPBI4qy_Wr5jDjKe0Pb40u9Tn27UA'
-							            videoId={ this._getVideoId( params.item.video_url ) } // The YouTube video ID
-							            play={false}           // control playback of video with true/false
-							            hidden={false}        // control visiblity of the entire view
-							            playsInline={true}    // control whether the video should play inline
-							            style={{alignSelf: 'stretch', height: 300, backgroundColor: 'black', marginVertical: 10}}
-							        />
-				                     <Text style={{ opacity: 0 }}>This is just placeholder text to display youtube video on WebView</Text>
-								</View>
+								{ this._renderLiveVideo( params.item.video_url ) }
 							</CardItem>
 						</Card>
 					</Content>

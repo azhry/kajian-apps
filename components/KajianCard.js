@@ -16,7 +16,7 @@ export default class KajianCard extends Component {
 		var datetime = datetime.split( ' ' );
 		var month = [ 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember' ];
 		var date = datetime[0].split( '-' );
-		date = date[2] + ' ' + month[date[1].replace(/^0+/, '')] + ' ' + date[0];
+		date = date[2] + ' ' + month[Number( date[1].replace(/^0+/, '') ) - 1] + ' ' + date[0];
 		var time = datetime[1].split( ':' );
 		time = time[0] + ':' + time[1];
 		return {
